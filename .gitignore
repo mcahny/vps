@@ -3,4 +3,5 @@
 __pycache__/
 work_dirs/
 data/
-.egg/
+.eggs/
+mmdet.egg-info/

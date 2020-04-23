@@ -73,6 +73,7 @@ mmdet/datasets/__init__.py
 mmdet/datasets/builder.py
 mmdet/datasets/cityscapes.py
 mmdet/datasets/cityscapes_dicts.py
+mmdet/datasets/cityscapes_video_ofs.py
 mmdet/datasets/coco.py
 mmdet/datasets/custom.py
 mmdet/datasets/dataset_wrappers.py
@@ -127,6 +128,7 @@ mmdet/models/detectors/htc.py
 mmdet/models/detectors/mask_rcnn.py
 mmdet/models/detectors/mask_scoring_rcnn.py
 mmdet/models/detectors/panoptic_flow_tcea.py
+mmdet/models/detectors/panoptic_track_flow_tcea.py
 mmdet/models/detectors/reppoints_detector.py
 mmdet/models/detectors/retinanet.py
 mmdet/models/detectors/rpn.py

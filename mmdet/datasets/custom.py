@@ -39,7 +39,7 @@ class CustomDataset(Dataset):
                  data_root=None,
                  img_prefix=None,
                  seg_prefix=None,
-                 flow_prefix=None,
+                 # flow_prefix=None,
                  ref_prefix=None,
                  proposal_file=None,
                  test_mode=False,
@@ -48,7 +48,7 @@ class CustomDataset(Dataset):
         self.data_root = data_root
         self.img_prefix = img_prefix
         self.seg_prefix = seg_prefix
-        self.flow_prefix = flow_prefix
+        # self.flow_prefix = flow_prefix
         self.ref_prefix = ref_prefix
         self.proposal_file = proposal_file
         self.test_mode = test_mode
@@ -62,8 +62,8 @@ class CustomDataset(Dataset):
                 self.img_prefix = osp.join(self.data_root, self.img_prefix)
             if not (self.seg_prefix is None or osp.isabs(self.seg_prefix)):
                 self.seg_prefix = osp.join(self.data_root, self.seg_prefix)
-            if not (self.flow_prefix is None or osp.isabs(self.flow_prefix)):
-                self.flow_prefix = osp.join(self.data_root, self.flow_prefix)
+            # if not (self.flow_prefix is None or osp.isabs(self.flow_prefix)):
+            #     self.flow_prefix = osp.join(self.data_root, self.flow_prefix)
             if not (self.ref_prefix is None or osp.isabs(self.ref_prefix)):
                 self.ref_prefix = osp.join(self.data_root, self.ref_prefix)
             if not osp.isabs(self.ref_ann_file):
@@ -106,7 +106,7 @@ class CustomDataset(Dataset):
     def pre_pipeline(self, results):
         results['img_prefix'] = self.img_prefix
         results['seg_prefix'] = self.seg_prefix
-        results['flow_prefix'] = self.flow_prefix
+        # results['flow_prefix'] = self.flow_prefix
         results['ref_prefix'] = self.ref_prefix
         results['proposal_file'] = self.proposal_file
         results['bbox_fields'] = []

@@ -138,13 +138,13 @@ test_cfg = dict(
     class_mapping = {1:11, 2:12, 3:13, 4:14, 5:15, 6:16, 7:17, 8:18})
 # dataset settings
 dataset_type = 'CityscapesDataset'
-data_root = 'data/cityscapes/'
+data_root = '../../data/cityscapes/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
-    dict(type='LoadRefImageFromFile', span=[0]),
+    dict(type='LoadRefImageFromFile', span=[-1, 1]),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True, 
-        with_seg=True,
+        with_seg=True, with_flow=False,
         semantic2label={0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, 9:9,
                         10:10, 11:11, 12:12, 13:13, 14:14, 15:15, 16:16,
                         17:17, 18:18, -1:255, 255:255},),
@@ -187,8 +187,7 @@ data = dict(
             img_prefix=data_root + 'train/',
             ref_prefix=data_root + 'train_nbr/',
             seg_prefix=data_root + 'labels/',
-            pipeline=train_pipeline,
-            offsets=[-1,+1])),
+            pipeline=train_pipeline)),
     val=dict(
         type=dataset_type,
         ann_file=data_root +

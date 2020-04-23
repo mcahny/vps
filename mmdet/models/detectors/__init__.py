@@ -14,6 +14,7 @@ from .rpn import RPN
 from .single_stage import SingleStageDetector
 from .two_stage import TwoStageDetector
 from .panoptic_flow_tcea import PanopticFlowTcea
+from .panoptic_track_flow_tcea import PanopticTrackFlowTcea
 
 
 __all__ = [
@@ -21,5 +22,5 @@ __all__ = [
     'RPN', 'FastRCNN', 'FasterRCNN', 'MaskRCNN', 'CascadeRCNN', 
     'HybridTaskCascade', 'DoubleHeadRCNN', 'RetinaNet', 'FCOS', 
     'GridRCNN', 'MaskScoringRCNN', 'RepPointsDetector', 
-    'PanopticFlowTcea',  
+    'PanopticFlowTcea', 'PanopticTrackFlowTcea',  
 ]

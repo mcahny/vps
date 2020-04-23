@@ -2,7 +2,7 @@ import collections
 
 from mmdet.utils import build_from_cfg
 from ..registry import PIPELINES
-
+import pdb
 
 @PIPELINES.register_module
 class Compose(object):

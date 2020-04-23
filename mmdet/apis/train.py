@@ -202,6 +202,12 @@ def _non_dist_train(model, dataset, cfg, validate=False):
     dataset = dataset if isinstance(dataset, (list, tuple)) else [dataset]
     
     # DEBUG ------
+    # for i in range(1,1000,10):
+    #     dbg = dataset[0].dataset.prepare_train_img(i)
+    #     pdb.set_trace()
+        # dbg = dataset[0].dataset.getitem(i)
+        # pdb.set_trace()
+
     # import matplotlib.pyplot as plt
     # import numpy as np
     # def normalize(img):

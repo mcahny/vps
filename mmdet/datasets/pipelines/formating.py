@@ -53,7 +53,7 @@ class ImageToTensor(object):
     def __call__(self, results):
         
         for key in self.keys:
-            if key in ['ref_img','next_img', 'gt_flow']:
+            if key in ['ref_img']:
                 if isinstance(results[key], list):
                     img_ref = []
                     for img in results[key]:
@@ -92,9 +92,9 @@ class Transpose(object):
 @PIPELINES.register_module
 class ToDataContainer(object):
 
-    def __init__(self,
-                 fields=(dict(key='img', stack=True), dict(key='gt_bboxes'),
-                         dict(key='gt_labels'))):
+    def __init__(self, fields=(dict(key='img', stack=True), 
+                               dict(key='gt_bboxes'),
+                               dict(key='gt_labels'))):
         self.fields = fields
 
     def __call__(self, results):
@@ -128,22 +128,18 @@ class DefaultFormatBundle(object):
     """
 
     def __call__(self, results):
+
         if 'img' in results:
             img = np.ascontiguousarray(results['img'].transpose(2, 0, 1))
             results['img'] = DC(to_tensor(img), stack=True)
         if 'ref_img' in results:
             img = np.ascontiguousarray(results['ref_img'].transpose(2, 0, 1))
             results['ref_img'] = DC(to_tensor(img), stack=True)
-        if 'next_img' in results:
-            img = np.ascontiguousarray(results['next_img'].transpose(2, 0, 1))
-            results['next_img'] = DC(to_tensor(img), stack=True)
 
         for key in ['proposals', 'gt_bboxes', 'gt_bboxes_ignore',
-                    'gt_labels', 'gt_obj_ids',
-                                 'ref_bboxes', 'ref_bboxes_ignore',
-                    'ref_labels', 'ref_obj_ids',
-                                 'next_bboxes', 'next_bboxes_ignore',
-                    'next_labels', 'next_obj_ids']:
+                    'gt_labels', 'gt_obj_ids', 'ref_bboxes', 
+                    'ref_bboxes_ignore', 'ref_labels', 'ref_obj_ids',
+                    ]:
             if key not in results:
                 continue
             results[key] = DC(to_tensor(results[key]))
@@ -151,8 +147,6 @@ class DefaultFormatBundle(object):
             results['gt_masks'] = DC(results['gt_masks'], cpu_only=True)
         if 'ref_masks' in results:
             results['ref_masks'] = DC(results['ref_masks'], cpu_only=True)
-        if 'next_masks' in results:
-            results['next_masks'] = DC(results['next_masks'], cpu_only=True)
 
         if 'gt_semantic_seg' in results:
             results['gt_semantic_seg'] = DC(
@@ -166,12 +160,6 @@ class DefaultFormatBundle(object):
         if 'ref_semantic_seg_Nx' in results:
             results['ref_semantic_seg_Nx'] = DC(
                 to_tensor(results['ref_semantic_seg_Nx'][None,:,:]), stack=True)
-        if 'next_semantic_seg' in results:
-            results['next_semantic_seg'] = DC(
-                to_tensor(results['next_semantic_seg'][None,:,:]), stack=True)
-        if 'next_semantic_seg_Nx' in results:
-            results['next_semantic_seg_Nx'] = DC(
-                to_tensor(results['next_semantic_seg_Nx'][None,:,:]), stack=True)
 
         # if 'ref_img' in results:
         #     if isinstance(results['ref_img'], list):
@@ -184,17 +172,17 @@ class DefaultFormatBundle(object):
         #     else:
         #         img = np.ascontiguousarray(results['ref_img'].transpose(2, 0, 1))
         #         results['ref_img'] = DC(to_tensor(img), stack=True)
-        if 'gt_flow' in results:
-            if isinstance(results['gt_flow'], list):
-                gt_flow=[]
-                for flo in results['gt_flow']:
-                    flo = np.ascontiguousarray(flo.transpose(2,0,1))
-                    gt_flow.append(flo)
-                gt_flow = np.array(gt_flow)
-                results['gt_flow'] = DC(to_tensor(gt_flow), stack=True)
-            else:
-                gt_flow = np.ascontiguousarray(results['gt_flow'].transpose(2,0,1))
-                results['gt_flow'] = DC(to_tensor(gt_flow), stack=True)
+        # if 'gt_flow' in results:
+        #     if isinstance(results['gt_flow'], list):
+        #         gt_flow=[]
+        #         for flo in results['gt_flow']:
+        #             flo = np.ascontiguousarray(flo.transpose(2,0,1))
+        #             gt_flow.append(flo)
+        #         gt_flow = np.array(gt_flow)
+        #         results['gt_flow'] = DC(to_tensor(gt_flow), stack=True)
+        #     else:
+        #         gt_flow = np.ascontiguousarray(results['gt_flow'].transpose(2,0,1))
+        #         results['gt_flow'] = DC(to_tensor(gt_flow), stack=True)
         return results
 
     def __repr__(self):
@@ -204,10 +192,9 @@ class DefaultFormatBundle(object):
 @PIPELINES.register_module
 class Collect(object):
 
-    def __init__(self,
-                 keys,
-                 meta_keys=('filename', 'ori_shape', 'img_shape', 'pad_shape',
-                            'scale_factor', 'flip', 'img_norm_cfg','iid')):
+    def __init__(self, keys, meta_keys=(
+            'filename', 'ori_shape', 'img_shape', 'pad_shape',
+            'scale_factor', 'flip', 'img_norm_cfg','iid')):
         self.keys = keys
         self.meta_keys = meta_keys
 

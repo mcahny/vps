@@ -1,6 +1,6 @@
 # model settings
 model = dict(
-    type='PanopticFlowTcea',
+    type='PanopticTrackFlowTcea',
     pretrained='modelzoo://resnet50',
     backbone=dict(
         type='ResNet',
@@ -20,8 +20,8 @@ model = dict(
         num_levels=5,
         refine_level=0,
         refine_type='conv',
-        nframes=2,
-        center=0),
+        center=0,
+        nframes=2),
     panoptic = dict(
             type='UPSNetFPN',
             in_channels=256,
@@ -61,6 +61,17 @@ model = dict(
         loss_cls=dict(
             type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
         loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0)),
+    track_head=dict(
+        type='TrackHead',
+        num_fcs=2,
+        in_channels=256,
+        fc_out_channels=1024,
+        roi_feat_size=7,
+        # match_coeff=[1.0,2.0, 10],
+        match_coeff=[1.0, 0.0, 10],
+        loss_match=dict(
+            type='CrossEntropyLoss', use_sigmoid=False, loss_weight=0.5),
+        ),
     mask_roi_extractor=dict(
         type='SingleRoIExtractor',
         roi_layer=dict(type='RoIAlign', out_size=14, sample_num=2),
@@ -98,8 +109,7 @@ train_cfg = dict(
         nms_post=2000,
         max_num=2000,
         nms_thr=0.7,
-        min_bbox_size=0,
-    ),
+        min_bbox_size=0),
     rcnn=dict(
         assigner=dict(
             type='MaxIoUAssigner',
@@ -134,17 +144,16 @@ test_cfg = dict(
         mask_thr_binary=0.5),
     loss_pano_weight=None,
     flownet2=[],
-    # for panoptic head 
     class_mapping = {1:11, 2:12, 3:13, 4:14, 5:15, 6:16, 7:17, 8:18})
 # dataset settings
-dataset_type = 'CityscapesDataset'
-data_root = 'data/cityscapes/'
+dataset_type = 'CityscapesVideoOfsDataset'
+data_root = 'data/cityscapes_ext/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
     dict(type='LoadRefImageFromFile', span=[0]),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True, 
-        with_seg=True,
+        with_seg=True, with_pid=True,
         semantic2label={0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, 9:9,
                         10:10, 11:11, 12:12, 13:13, 14:14, 15:15, 16:16,
                         17:17, 18:18, -1:255, 255:255},),
@@ -154,13 +163,29 @@ train_pipeline = [
     dict(type='Normalize', **img_norm_cfg),
     dict(type='RandomCrop', crop_size=(800, 1600)),
     dict(type='Pad', size_divisor=32),
+    # dict(type='ImgResizeFlipNormCropPad'),
     dict(type='SegResizeFlipCropPadRescale', scale_factor=[1, 0.25]),
+    # dict(type='FlowResizeFlipCropPadRescale', scale_factor=1),
     dict(type='DefaultFormatBundle'),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'ref_img',
-             'gt_masks', 'gt_semantic_seg', 'gt_semantic_seg_Nx']),
+    # dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 
+    #         'gt_obj_ids', 'gt_masks', 'gt_semantic_seg', 
+    #         'gt_semantic_seg_Nx', 'ref_img', 'ref_bboxes', 
+    #         'ref_labels', 'ref_obj_ids', 'ref_masks', 
+    #         'ref_semantic_seg', 'ref_semantic_seg_Nx']),
+    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 
+            'gt_obj_ids', 'gt_masks', 'gt_semantic_seg', 
+            'gt_semantic_seg_Nx', 'ref_img', 'ref_bboxes', 
+            'ref_labels', 'ref_obj_ids', 'ref_masks']),
 ]
 test_pipeline = [
-    dict(type='LoadRefImageFromFile', span=[-1]),
+    dict(type='LoadRefImageFromFile'),
+    # dict(type='Resize', img_scale=[(2048, 1024)], keep_ratio=True,
+    #     multiscale_mode='value'),
+    # dict(type='RandomFlip', flip_ratio=0),
+    # dict(type='Normalize', **img_norm_cfg),
+    # dict(type='Pad', size_divisor=32),
+    # dict(type='ImageToTensor', keys=['img']),
+    # dict(type='Collect', keys=['img']),
     dict(
         type='MultiScaleFlipAug',
         img_scale=[(2048, 1024)],
@@ -170,6 +195,7 @@ test_pipeline = [
             dict(type='RandomFlip'),
             dict(type='Normalize', **img_norm_cfg),
             dict(type='Pad', size_divisor=32),
+            # dict(type='ImgResizeFlipNormCropPad'),
             dict(type='ImageToTensor', keys=['img', 'ref_img']),
             dict(type='Collect', keys=['img', 'ref_img']),
         ])
@@ -179,28 +205,37 @@ data = dict(
     workers_per_gpu=2,
     train=dict(
         type='RepeatDataset',
+        # times=1,
         times=8,
         dataset=dict(
             type=dataset_type,
             ann_file=data_root +
-            'annotations/instancesonly_gtFine_train.json',
-            img_prefix=data_root + 'train/',
-            ref_prefix=data_root + 'train_nbr/',
-            seg_prefix=data_root + 'labels/',
+            'instances_train_01_city_coco_rle.json',
+            img_prefix=data_root + 'train/img/',
+            ref_prefix=data_root + 'train/img/',
+            seg_prefix=data_root + 'train/labelmap/',
+            # flow_prefix=data_root + 'flows/',
             pipeline=train_pipeline,
+            ref_ann_file=data_root + 
+            'instances_train_01_city_coco_rle.json',
             offsets=[-1,+1])),
     val=dict(
         type=dataset_type,
         ann_file=data_root +
-        'annotations/instancesonly_gtFine_val.json',
-        img_prefix=data_root + 'val/',
+        'instances_val_01_city_coco_rle.json',
+        img_prefix=data_root + 'val/img/',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
         ann_file=data_root +
-        'annotations/instancesonly_pano_gtFine_val.json',
-        img_prefix=data_root + 'val/',
-        ref_prefix=data_root + 'val_nbr/',
+        # 'instances_val_01_city_coco_rle.json',
+        'instances_val_01_city_im_munster.json',
+        img_prefix=data_root + 'demo_munster/img/',
+        ref_prefix=data_root + 'demo_munster/img/',
+        # 'instances_val_01_city_im_lindau.json',
+        # img_prefix=data_root + 'demo_lindau/img/',
+        # ref_prefix=data_root + 'demo_lindau/img/',
+        # flow_prefix=data_root + 'flows/',
         pipeline=test_pipeline))
 # optimizer
 # lr is set for a batch size of 8
@@ -213,7 +248,7 @@ lr_config = dict(
     warmup_iters=500,
     warmup_ratio=1.0 / 3,
     step=[8,11])
-checkpoint_config = dict(interval=4)
+checkpoint_config = dict(interval=2)
 # yapf:disable
 log_config = dict(
     interval=100,
@@ -226,8 +261,17 @@ log_config = dict(
 total_epochs = 12
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/cityscapes/ups_pano_flow_tcea_vp'
-load_from = './work_dirs/viper/ups_pano_flow_tcea/latest.pth'
+work_dir = './work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct'
+# load_from = './work_dirs/panopticFPN_coco/latest.pth'
+# load_from = './work_dirs/cityscapes/ups_cococity_512x2/latest.pth'
+# load_from = './work_dirs/cityscapes/ups_pano_coco/latest.pth'
+# load_from = './work_dirs/viper/ups_pano_track_flow_tcea/latest.pth'
+load_from = './work_dirs/cityscapes/ups_pano_flow_tcea_vp/latest.pth'
 # load_from = None
+# resume_from = './work_dirs/cityscapes/ups_async_cococity_512x2/latest.pth'
 resume_from = None
 workflow = [('train', 1)]
+
+
+
+

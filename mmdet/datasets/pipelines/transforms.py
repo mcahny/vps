@@ -106,8 +106,6 @@ class Resize(object):
 
     def _resize_img(self, results):
         els = ['ref_img', 'img'] if 'ref_img' in results else ['img']
-        if 'next_img' in results:
-            els.append('next_img')
         for el in els:
             if self.keep_ratio:
                 img, scale_factor = mmcv.imrescale(
@@ -125,20 +123,18 @@ class Resize(object):
 
     def _resize_bboxes(self, results):
         els = ['ref_bbox_fields', 'bbox_fields'] if 'ref_bbox_fields' in results else ['bbox_fields']
-        if 'next_bbox_fields' in results:
-            els.append('next_bbox_fields')
         for el in els:
             img_shape = results['img_shape']
             for key in results.get(el, []):
                 bboxes = results[key] * results['scale_factor']
-                bboxes[:, 0::2] = np.clip(bboxes[:, 0::2], 0, img_shape[1] - 1)
-                bboxes[:, 1::2] = np.clip(bboxes[:, 1::2], 0, img_shape[0] - 1)
+                bboxes[:, 0::2] = np.clip(
+                        bboxes[:, 0::2], 0, img_shape[1] - 1)
+                bboxes[:, 1::2] = np.clip(
+                        bboxes[:, 1::2], 0, img_shape[0] - 1)
                 results[key] = bboxes
 
     def _resize_masks(self, results):
         els = ['ref_mask_fields', 'mask_fields'] if 'ref_mask_fields' in results else ['mask_fields']
-        if 'next_mask_fields' in results:
-            els.append('next_mask_fields')
         for el in els:
             for key in results.get(el, []):
                 if results[key] is None:
@@ -146,13 +142,16 @@ class Resize(object):
                 if self.keep_ratio:
                     masks = [
                         mmcv.imrescale(
-                            mask, results['scale_factor'], interpolation='nearest')
+                            mask, results['scale_factor'], 
+                            interpolation='nearest')
                         for mask in results[key]
                     ]
                 else:
-                    mask_size = (results['img_shape'][1], results['img_shape'][0])
+                    mask_size = (results['img_shape'][1], 
+                        results['img_shape'][0])
                     masks = [
-                        mmcv.imresize(mask, mask_size, interpolation='nearest')
+                        mmcv.imresize(mask, mask_size, 
+                            interpolation='nearest')
                         for mask in results[key]
                     ]
                 results[key] = masks
@@ -216,8 +215,6 @@ class RandomFlip(object):
             results['img'] = mmcv.imflip(results['img'])
             if 'ref_img' in results:
                 results['ref_img'] = mmcv.imflip(results['ref_img'])
-            if 'next_img' in results:
-                results['next_img'] = mmcv.imflip(results['next_img'])
             # flip bboxes
             for key in results.get('bbox_fields', []):
                 results[key] = self.bbox_flip(results[key],
@@ -225,15 +222,10 @@ class RandomFlip(object):
             for key in results.get('ref_bbox_fields', []):
                 results[key] = self.bbox_flip(results[key],
                                               results['img_shape'])
-            for key in results.get('next_bbox_fields', []):
-                results[key] = self.bbox_flip(results[key],
-                                              results['img_shape'])
             # flip masks
             for key in results.get('mask_fields', []):
                 results[key] = [mask[:, ::-1] for mask in results[key]]
             for key in results.get('ref_mask_fields', []):
-                results[key] = [mask[:, ::-1] for mask in results[key]]
-            for key in results.get('next_mask_fields', []):
                 results[key] = [mask[:, ::-1] for mask in results[key]]
         return results
 
@@ -265,8 +257,6 @@ class Pad(object):
 
     def _pad_img(self, results):
         els = ['ref_img', 'img'] if 'ref_img' in results else ['img']
-        if 'next_img' in results:
-            els.append('next_img')
         for el in els:
             if self.size is not None:
                 padded_img = mmcv.impad(results['img'], self.size)
@@ -280,8 +270,6 @@ class Pad(object):
 
     def _pad_masks(self, results):
         els = ['ref_mask_fields', 'mask_fields'] if 'ref_mask_fields' in results else ['mask_fields']
-        if 'next_mask_fields' in results:
-            els.append('next_mask_fields')
         for el in els:
             pad_shape = results['pad_shape'][:2]
             for key in results.get(el, []):
@@ -320,22 +308,19 @@ class Normalize(object):
         self.to_rgb = to_rgb
 
     def __call__(self, results):
-        results['img'] = mmcv.imnormalize(results['img'], self.mean, self.std,
-                                          self.to_rgb)
+        results['img'] = mmcv.imnormalize(
+                results['img'], self.mean, self.std, self.to_rgb)
         if 'ref_img' in results:
-            results['ref_img'] = mmcv.imnormalize(results['ref_img'], 
-                self.mean, self.std, self.to_rgb)
-        if 'next_img' in results:
-            results['next_img'] = mmcv.imnormalize(results['next_img'], 
-                self.mean, self.std, self.to_rgb)
+            results['ref_img'] = mmcv.imnormalize(
+                    results['ref_img'], self.mean, self.std, self.to_rgb)
         results['img_norm_cfg'] = dict(
-            mean=self.mean, std=self.std, to_rgb=self.to_rgb)
+                mean=self.mean, std=self.std, to_rgb=self.to_rgb)
         return results
 
     def __repr__(self):
         repr_str = self.__class__.__name__
         repr_str += '(mean={}, std={}, to_rgb={})'.format(
-            self.mean, self.std, self.to_rgb)
+                self.mean, self.std, self.to_rgb)
         return repr_str
 
 
@@ -369,30 +354,25 @@ class RandomCrop(object):
             ref_img = results['ref_img']
             ref_img = ref_img[crop_y1:crop_y2, crop_x1:crop_x2, :]
             results['ref_img'] = ref_img
-        if 'next_img' in results:
-            ref_img = results['next_img']
-            ref_img = ref_img[crop_y1:crop_y2, crop_x1:crop_x2, :]
-            results['next_img'] = ref_img
         results['img_shape'] = img_shape
         results['crop_coords'] = [crop_y1,crop_y2,crop_x1,crop_x2]
 
         # crop bboxes accordingly and clip to the image boundary
         els = ['ref_bbox_fields', 'bbox_fields'] if 'ref_bbox_fields' in results else ['bbox_fields']
-        if 'next_bbox_fields' in results:
-            els.append('next_bbox_fields')
         for el in els:
             for key in results.get(el, []):
-                bbox_offset = np.array([offset_w, offset_h, offset_w, offset_h],
-                                       dtype=np.float32)
+                bbox_offset = np.array(
+                        [offset_w, offset_h, offset_w, offset_h],
+                        dtype=np.float32)
                 bboxes = results[key] - bbox_offset
-                bboxes[:, 0::2] = np.clip(bboxes[:, 0::2], 0, img_shape[1] - 1)
-                bboxes[:, 1::2] = np.clip(bboxes[:, 1::2], 0, img_shape[0] - 1)
+                bboxes[:, 0::2] = np.clip(
+                        bboxes[:, 0::2], 0, img_shape[1] - 1)
+                bboxes[:, 1::2] = np.clip(
+                        bboxes[:, 1::2], 0, img_shape[0] - 1)
                 results[key] = bboxes
 
         # filter out the gt bboxes that are completely cropped
         els = ['ref_bboxes', 'gt_bboxes'] if 'ref_bboxes' in results else ['gt_bboxes']
-        if 'next_bboxes' in results:
-            els.append('next_bboxes')
         for el in els:
             if el in results:
                 gt_bboxes = results[el]
@@ -414,8 +394,8 @@ class RandomCrop(object):
                 if elm in results:
                     valid_gt_masks = []
                     for i in np.where(valid_inds)[0]:
-                        gt_mask = results[elm][i][crop_y1:crop_y2, crop_x1:
-                                                         crop_x2]
+                        gt_mask = results[elm][i][
+                                crop_y1:crop_y2, crop_x1:crop_x2]
                         valid_gt_masks.append(gt_mask)
                     results[elm] = valid_gt_masks
 
@@ -451,9 +431,9 @@ class SegResizeFlipCropPadRescale(object):
             self.another_scale = None
 
     def __call__(self, results):
-        els = ['ref_semantic_seg', 'gt_semantic_seg'] if 'ref_semantic_seg' in results else ['gt_semantic_seg']
-        if 'next_semantic_seg' in results:
-            els.append('next_semantic_seg')
+        els = (['ref_semantic_seg', 'gt_semantic_seg'] 
+                if 'ref_semantic_seg' in results 
+                else ['gt_semantic_seg'])
         for el in els:
             if results['keep_ratio']:
                 gt_seg = mmcv.imrescale(
@@ -487,66 +467,66 @@ class SegResizeFlipCropPadRescale(object):
         return self.__class__.__name__ + '(scale_factor={})'.format(
             self.scale_factor)
 
-@PIPELINES.register_module
-class FlowResizeFlipCropPadRescale(object):
-    """A sequential transforms to semantic segmentation maps.
+# @PIPELINES.register_module
+# class FlowResizeFlipCropPadRescale(object):
+#     """A sequential transforms to semantic segmentation maps.
 
-    The same pipeline as input images is applied to the semantic segmentation
-    map, and finally rescale it by some scale factor. The transforms include:
-    1. resize
-    2. flip
-    3. crop
-    4. pad
-    5. rescale (so that the final size can be different from the image size)
+#     The same pipeline as input images is applied to the semantic segmentation
+#     map, and finally rescale it by some scale factor. The transforms include:
+#     1. resize
+#     2. flip
+#     3. crop
+#     4. pad
+#     5. rescale (so that the final size can be different from the image size)
 
-    Args:
-        scale_factor (float): The scale factor of the final output.
-    """
+#     Args:
+#         scale_factor (float): The scale factor of the final output.
+#     """
 
-    def __init__(self, scale_factor=1):
-        self.scale_factor = scale_factor
+#     def __init__(self, scale_factor=1):
+#         self.scale_factor = scale_factor
 
-    def single_call(self, results, gt_flow):
-        if results['keep_ratio']:
-            gt_flow = mmcv.imrescale(
-                gt_flow,
-                results['scale'],
-                interpolation='bilinear')*results['scale_factor']
-        else:
-            gt_flow = mmcv.imresize(
-                gt_flow,
-                results['scale'],
-                interpolation='bilinear')*results['scale_factor']
-        if results['flip']:
-            gt_flow = mmcv.imflip(gt_flow)
-            # if flip, reverse the x-axis values
-            gt_flow[:,:,0] *= -1
-        if 'crop_coords' in results:
-            crds = results['crop_coords']
-            gt_flow = gt_flow[crds[0]:crds[1], crds[2]:crds[3]]
-        if gt_flow.shape[:2] != results['pad_shape'][:2]:
-            raise ValueError('gt_flow shape does not match with pad_shape')
-            # gt_flow = mmcv.impad(gt_flow, results['pad_shape'][:2])
-        if self.scale_factor != 1:
-            gt_flow = mmcv.imrescale(gt_flow, 
-                self.scale_factor, interpolation='bilinear')*self.scale_factor
-        return gt_flow
+#     def single_call(self, results, gt_flow):
+#         if results['keep_ratio']:
+#             gt_flow = mmcv.imrescale(
+#                 gt_flow,
+#                 results['scale'],
+#                 interpolation='bilinear')*results['scale_factor']
+#         else:
+#             gt_flow = mmcv.imresize(
+#                 gt_flow,
+#                 results['scale'],
+#                 interpolation='bilinear')*results['scale_factor']
+#         if results['flip']:
+#             gt_flow = mmcv.imflip(gt_flow)
+#             # if flip, reverse the x-axis values
+#             gt_flow[:,:,0] *= -1
+#         if 'crop_coords' in results:
+#             crds = results['crop_coords']
+#             gt_flow = gt_flow[crds[0]:crds[1], crds[2]:crds[3]]
+#         if gt_flow.shape[:2] != results['pad_shape'][:2]:
+#             raise ValueError('gt_flow shape does not match with pad_shape')
+#             # gt_flow = mmcv.impad(gt_flow, results['pad_shape'][:2])
+#         if self.scale_factor != 1:
+#             gt_flow = mmcv.imrescale(gt_flow, 
+#                 self.scale_factor, interpolation='bilinear')*self.scale_factor
+#         return gt_flow
 
-    def __call__(self, results):
-        if isinstance(results['gt_flow'], list):
-            results_gt_flow = []
-            for gt_flow in results['gt_flow']:
-                results_gt_flow.append(
-                    self.single_call(results, gt_flow))
-            results['gt_flow'] = results_gt_flow
-        else:
-            results['gt_flow'] = self.single_call(
-                                    results, results['gt_Flow'])
-        return results
+#     def __call__(self, results):
+#         if isinstance(results['gt_flow'], list):
+#             results_gt_flow = []
+#             for gt_flow in results['gt_flow']:
+#                 results_gt_flow.append(
+#                     self.single_call(results, gt_flow))
+#             results['gt_flow'] = results_gt_flow
+#         else:
+#             results['gt_flow'] = self.single_call(
+#                                     results, results['gt_Flow'])
+#         return results
 
-    def __repr__(self):
-        return self.__class__.__name__ + '(scale_factor={})'.format(
-            self.scale_factor)
+#     def __repr__(self):
+#         return self.__class__.__name__ + '(scale_factor={})'.format(
+#             self.scale_factor)
 
 
 @PIPELINES.register_module
@@ -578,8 +558,10 @@ class ImgResizeFlipNormCropPad(object):
             img_ref = mmcv.imflip(img_ref)
         if results['img_norm_cfg']:
             img_norm_cfg = results['img_norm_cfg']
-            img_ref = mmcv.imnormalize(img_ref, img_norm_cfg['mean'],
-                                img_norm_cfg['std'], img_norm_cfg['to_rgb'])
+            img_ref = mmcv.imnormalize(
+                    img_ref, img_norm_cfg['mean'],
+                    img_norm_cfg['std'], 
+                    img_norm_cfg['to_rgb'])
         if 'crop_coords' in results:
             crds = results['crop_coords']
             img_ref = img_ref[crds[0]:crds[1], crds[2]:crds[3], :]
@@ -592,11 +574,11 @@ class ImgResizeFlipNormCropPad(object):
             results_img_ref = []
             for img_ref in results['ref_img']:
                 results_img_ref.append(
-                    self.single_call(results, img_ref))
+                        self.single_call(results, img_ref))
             results['ref_img'] = results_img_ref
         else:
             results['ref_img'] = self.single_call(
-                                    results, results['ref_img'])
+                    results, results['ref_img'])
         return results
 
         # if results['keep_ratio']:

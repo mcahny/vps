@@ -1,6 +1,7 @@
 # .gitignore
 *.pyc
 __pycache__/
+build/
 work_dirs/
 data/
 *eggs/

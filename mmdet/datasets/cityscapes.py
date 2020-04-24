@@ -104,6 +104,24 @@ class CityscapesDataset(CocoDataset):
         return self.pipeline(results)
 
 
+    def prepare_test_img(self, idx):
+        img_info = self.img_infos[idx]
+        filename = img_info['filename']
+        # Cityscapes - specific filename
+        fid = int(filename.split('_')[-2])
+        suffix = '_'+filename.split('_')[-1]
+        # reference frame = past (-1) frame
+        ref_filename = filename.replace(
+                '%06d'%fid+suffix, 
+                '%06d'%(fid-1)+suffix) if fid >= 1 else filename
+        img_info['ref_filename'] = ref_filename
+        results = dict(img_info=img_info)
+        if self.proposals is not None:
+            results['proposals'] = self.proposals[idx]
+        self.pre_pipeline(results)
+        return self.pipeline(results)
+
+
     ###### CHECK: NOT USING ?
     # def prepare_pano_test_img(self, idx):
     #     pdb.set_trace()

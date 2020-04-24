@@ -229,12 +229,14 @@ data = dict(
         type=dataset_type,
         ann_file=data_root +
         # 'instances_val_01_city_coco_rle.json',
-        'instances_val_01_city_im_munster.json',
-        img_prefix=data_root + 'demo_munster/img/',
-        ref_prefix=data_root + 'demo_munster/img/',
-        # 'instances_val_01_city_im_lindau.json',
-        # img_prefix=data_root + 'demo_lindau/img/',
-        # ref_prefix=data_root + 'demo_lindau/img/',
+        # img_prefix=data_root + 'demo_cvpr/img/',
+        # ref_prefix=data_root + 'demo_cvpr/img/',
+        # 'instances_val_01_city_im_munster.json',
+        # img_prefix=data_root + 'demo_munster/img/',
+        # ref_prefix=data_root + 'demo_munster/img/',
+        'instances_val_01_city_im_lindau.json',
+        img_prefix=data_root + 'demo_lindau/img/',
+        ref_prefix=data_root + 'demo_lindau/img/',
         # flow_prefix=data_root + 'flows/',
         pipeline=test_pipeline))
 # optimizer
@@ -248,7 +250,7 @@ lr_config = dict(
     warmup_iters=500,
     warmup_ratio=1.0 / 3,
     step=[8,11])
-checkpoint_config = dict(interval=2)
+checkpoint_config = dict(interval=4)
 # yapf:disable
 log_config = dict(
     interval=100,

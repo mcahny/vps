@@ -142,7 +142,8 @@ data_root = 'data/cityscapes/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
-    dict(type='LoadRefImageFromFile', span=[0]),
+    # dict(type='LoadRefImageFromFile', span=[0]),
+    dict(type='LoadRefImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True, 
         with_seg=True,
         semantic2label={0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, 9:9,
@@ -160,7 +161,8 @@ train_pipeline = [
              'gt_masks', 'gt_semantic_seg', 'gt_semantic_seg_Nx']),
 ]
 test_pipeline = [
-    dict(type='LoadRefImageFromFile', span=[-1]),
+    # dict(type='LoadRefImageFromFile', span=[-1]),
+    dict(type='LoadRefImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
         img_scale=[(2048, 1024)],
@@ -212,8 +214,9 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=500,
     warmup_ratio=1.0 / 3,
-    step=[8,11])
-checkpoint_config = dict(interval=4)
+    # step=[8,11])
+    step=[16,22])
+checkpoint_config = dict(interval=12)
 # yapf:disable
 log_config = dict(
     interval=100,
@@ -223,11 +226,13 @@ log_config = dict(
     ])
 # yapf:enable
 # runtime settings
-total_epochs = 12
+# total_epochs = 12
+total_epochs = 24
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
 work_dir = './work_dirs/cityscapes/ups_pano_flow_tcea_vp'
-load_from = './work_dirs/viper/ups_pano_flow_tcea/latest.pth'
+# load_from = './work_dirs/viper/ups_pano_flow_tcea/latest.pth'
+load_from = './work_dirs/panopticFPN_coco/latest.pth'
 # load_from = None
 resume_from = None
 workflow = [('train', 1)]

@@ -94,8 +94,7 @@ class LoadRefImageFromFile(object):
     def __call__(self, results):
         # requires dirname for ref images
         assert results['ref_prefix'] is not None, 'ref_prefix must be specified.'
-        # refname = osp.join(results['ref_prefix'],
-        #                    results['img_info']['filename'])
+        
         filename = osp.join(results['img_prefix'],
                             results['img_info']['filename'])
         img = mmcv.imread(filename)
@@ -106,6 +105,8 @@ class LoadRefImageFromFile(object):
             ref_img = mmcv.imread(ref_filename) # [1080, 1920, 3]
         else:
             raise NotImplementedError('We need this implementation.')
+            refname = osp.join(results['ref_prefix'],
+                           results['img_info']['filename'])
             #### get fid from filename
             if 'leftImg8bit' in filename:
                 fid = int(filename.split('_')[-2])

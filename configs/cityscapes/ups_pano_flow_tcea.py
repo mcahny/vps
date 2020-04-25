@@ -231,8 +231,8 @@ total_epochs = 24
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
 work_dir = './work_dirs/cityscapes/ups_pano_flow_tcea_vp'
-# load_from = './work_dirs/viper/ups_pano_flow_tcea/latest.pth'
-load_from = './work_dirs/panopticFPN_coco/latest.pth'
+load_from = './work_dirs/viper/ups_pano_flow_tcea/latest.pth'
+# load_from = './work_dirs/panopticFPN_coco/latest.pth'
 # load_from = None
 resume_from = None
 workflow = [('train', 1)]

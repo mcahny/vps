@@ -67,8 +67,8 @@ model = dict(
         in_channels=256,
         fc_out_channels=1024,
         roi_feat_size=7,
-        # match_coeff=[1.0,2.0, 10],
-        match_coeff=[1.0, 0.0, 10],
+        match_coeff=[1.0,2.0, 10],
+        # match_coeff=[1.0, 0.0, 10],
         loss_match=dict(
             type='CrossEntropyLoss', use_sigmoid=False, loss_weight=0.5),
         ),
@@ -228,15 +228,19 @@ data = dict(
     test=dict(
         type=dataset_type,
         ann_file=data_root +
-        # 'instances_val_01_city_coco_rle.json',
+        # 'instances_val_01_city_im_cvpr.json',
         # img_prefix=data_root + 'demo_cvpr/img/',
         # ref_prefix=data_root + 'demo_cvpr/img/',
-        # 'instances_val_01_city_im_munster.json',
-        # img_prefix=data_root + 'demo_munster/img/',
-        # ref_prefix=data_root + 'demo_munster/img/',
-        'instances_val_01_city_im_lindau.json',
-        img_prefix=data_root + 'demo_lindau/img/',
-        ref_prefix=data_root + 'demo_lindau/img/',
+        'instances_val_01_city_im_munster.json',
+        img_prefix=data_root + 'demo_munster/img/',
+        ref_prefix=data_root + 'demo_munster/img/',
+        # 'instances_val_01_city_im_lindau.json',
+        # img_prefix=data_root + 'demo_lindau/img/',
+        # ref_prefix=data_root + 'demo_lindau/img/',
+        # # 'instances_val_01_city_im_lindau.json',
+        # 'instances_val_01_city_im_info.json',
+        # img_prefix=data_root + 'val/img_all/',
+        # ref_prefix=data_root + 'val/img_all/',
         # flow_prefix=data_root + 'flows/',
         pipeline=test_pipeline))
 # optimizer

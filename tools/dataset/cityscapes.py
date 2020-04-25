@@ -75,8 +75,8 @@ class Cityscapes(BaseDataset):
         }
 
         self.panoptic_json_file = os.path.join(
-                config.dataset.dataset_path, 'annotations', 
-                'cityscapes_fine_val.json')
+                config.dataset.dataset_path, 
+                'annotations', 'cityscapes_fine_val.json')
         self.panoptic_gt_folder = 'data/cityscapes/panoptic'
 
         self.flip = flip

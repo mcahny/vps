@@ -354,6 +354,7 @@ class BaseDataset(torch.utils.data.Dataset):
         OFFSET = 256 * 256 * 256
         VOID = 0
         pq_stat = PQStat()
+
         for idx, (gt_json, pred_json, gt_pan, pred_pan, gt_image_json) in enumerate(zip(gt_jsons_set, pred_jsons_set, gt_pans_set, pred_pans_set, gt_image_jsons_set)):
             # if idx % 100 == 0:
             #     logger.info('Compute pq -> Core: {}, {} from {} images processed'.format(proc_id, idx, len(gt_jsons_set)))

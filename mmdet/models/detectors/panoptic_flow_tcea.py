@@ -131,7 +131,7 @@ class PanopticFlowTcea(TwoStageDetector):
         elif H == 200 and W == 400:
             rgbs = F.pad(rgbs,(0,48,0,56))
         # flownet input must be divisible by 64.
-        assert rgbs.size(-2)%64==0 and rgbs.size(-1)%64==0
+        assert rgbs.size(-2)%64==0 and rgbs.size(-1)%64==0, "Flownet input must be divisible by 64."
         self.flownet2.cuda(rgbs.device)
         self.flownet2.eval()
         flow = self.flownet2(rgbs)
@@ -166,7 +166,7 @@ class PanopticFlowTcea(TwoStageDetector):
                       ref_obj_ids=None,
                       gt_pids=None, # gt ids of target objs mapped to reference objs
                       gt_obj_ids=None,
-                      gt_flow=None,                     
+                      # gt_flow=None,                     
                       ):
         # #### DEBUG
         # flow_warping = Resample2d().cuda()
@@ -232,8 +232,8 @@ class PanopticFlowTcea(TwoStageDetector):
             #### semantic FCN GT
             gt_semantic_seg = gt_semantic_seg.long()
             gt_semantic_seg = gt_semantic_seg.squeeze(1)
-            fcn_output, fcn_score = \
-                    self.panopticFPN(x[0:self.panopticFPN.num_levels])
+            fcn_output, fcn_score = self.panopticFPN(
+                    x[0:self.panopticFPN.num_levels])
             loss_fcn = F.cross_entropy(
                     fcn_output, gt_semantic_seg, ignore_index=255)
             loss_fcn = {'loss_segm': loss_fcn}
@@ -502,18 +502,19 @@ class PanopticFlowTcea(TwoStageDetector):
         return segm_result
 
 
-
+    # ==== Test forward  ====
     def simple_test(self, img, img_meta, proposals=None, rescale=False,
                         ref_img=None, gt_flow=None):
         im_info = np.array([[float(img.shape[2]), float(img.shape[3]), 1.0]])
         # This has not been handled in base.py ...
         if ref_img is not None:
             ref_img=ref_img[0]
-        if gt_flow is not None:
-            gt_flow=gt_flow[0]
+        # if gt_flow is not None:
+        #     gt_flow=gt_flow[0]
 
         if hasattr(self.test_cfg, 'flownet2'):
-            flowR2T, _ = self.compute_flow(img.clone(), ref_img.clone(), scale_factor=0.25)
+            flowR2T, _ = self.compute_flow(
+                    img.clone(), ref_img.clone(), scale_factor=0.25)
         else:
             flowR2T = None
 

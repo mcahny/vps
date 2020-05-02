@@ -32,6 +32,8 @@ from tools.config.config import config
 # from tools.dataset.json_dataset import JsonDataset, extend_with_flipped_entries, filter_for_training, add_bbox_regression_targets
 from tools.dataset.json_dataset import JsonDataset
 from tools.dataset.base_dataset import BaseDataset
+# from upsnet.dataset.json_dataset import JsonDataset
+# from upsnet.dataset.base_dataset import BaseDataset
 # from upsnet.rpn.assign_anchor import add_rpn_blobs
 # from upsnet.bbox.sample_rois import sample_rois
 from lib.utils.logging import logger
@@ -58,12 +60,13 @@ class Cityscapes(BaseDataset):
         #     'train_extra': 'instancesonly_gtCoarse_train_extra.json',
         #     'debug': 'instancesonly_gtFine_debug.json',
         # }
+
+        # **** TRY TO REMOVE THIS PART BELOW ****
+        # ****************** LATEST ********************
         self.image_dirs = {
             'train': os.path.join(config.dataset.dataset_path, 'images'),
             'val': os.path.join(config.dataset.dataset_path, 'images'),
             'test': os.path.join(config.dataset.dataset_path, 'images'),
-            # 'train_extra': os.path.join(config.dataset.dataset_path, 'images'),
-            # 'debug': os.path.join(config.dataset.dataset_path, 'images'),
         }
 
         self.anno_files = {
@@ -96,6 +99,39 @@ class Cityscapes(BaseDataset):
 
         roidb = self.dataset.get_roidb()
         self.roidb = roidb
+        # ---------------------------------------------
+
+        # ************ FOR DEBUG
+        # config.dataset.dataset_path = 'data/cityscapes_ext/'
+        # config.dataset.name = 'val'
+
+        # self.image_dirs = {
+        #     'train': os.path.join(config.dataset.dataset_path, 'train/img'),
+        #     'val': os.path.join(config.dataset.dataset_path, 'val/img'),
+        #     'test': os.path.join(config.dataset.dataset_path, 'test/img'),
+        # }
+        # self.anno_files = {
+        #     'train': 'instances_train_01_city_coco_rle.json',
+        #     'val': 'instances_val_01_city_coco_rle.json',
+        #     'test': 'instances_val_01_city_coco_rle.json',
+        # }
+        # self.panoptic_json_file = 'data/cityscapes_ext/cityscapes_ext_panoptic_val_video.json'
+        # self.panoptic_gt_folder = 'data/cityscapes_ext/val/panoptic_video/'
+
+        # assert len(image_sets) == 1
+        # self.dataset = JsonDataset('cityscapes_ext_' + image_sets[0],
+        #                            image_dir=self.image_dirs[image_sets[0]],
+        #                            anno_file=os.path.join(config.dataset.dataset_path,
+        #                            self.anno_files[image_sets[0]]))
+
+        # roidb = self.dataset.get_roidb(gt=True, proposal_file=None,
+        #                                crowd_filter_thresh=config.train.crowd_filter_thresh if phase != 'test' else 0)
+        # self.roidb = roidb
+
+
+
+
+
 
     
     def get_pallete(self):

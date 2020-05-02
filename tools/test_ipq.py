@@ -79,7 +79,7 @@ def parse_args():
     parser.add_argument('checkpoint', help='checkpoint file')
     parser.add_argument('--out', help='output result file')
     parser.add_argument('--load', action='store_true')
-    parser.add_argument('--gpus', type=str, default=0 )
+    parser.add_argument('--gpus', type=str, default='0' )
     # parser.add_argument('--track', action='store_true')
     # parser.add_argument('--json_out',help='output result file name without extension', type=str)
     # parser.add_argument('--eval', type=str, nargs='+',
@@ -104,7 +104,7 @@ def parse_args():
         os.environ['LOCAL_RANK'] = str(args.local_rank)
     return args
 
-from easydict import EasyDict as edict
+# from easydict import EasyDict as edict
 
 def main():
 
@@ -182,12 +182,15 @@ def main():
     # *******************************************
     print("==> Semantic Segmentation results will be saved at:")
     print("---", args.out.split('.pkl')[0]+'_ssegs/')
-    eval_helper_dataset.evaluate_ssegs(outputs_pano['all_ssegs'], args.out.replace('.pkl','_ssegs'), outputs_pano['all_names'])
+    eval_helper_dataset.evaluate_ssegs(
+            outputs_pano['all_ssegs'], 
+            args.out.replace('.pkl','_ssegs'), 
+            outputs_pano['all_names'])
 
     # *******************************************    
-    # EVAL: PANOPTIC SEGMENTATION
+    # EVAL: IMAGE PANOPTIC SEGMENTATION
     # *******************************************
-    print("==> Panoptic Segmentation results will be saved at:")
+    print("==> Image Panoptic Segmentation results will be saved at:")
     print("---", args.out.split('.pkl')[0]+'_pans_unified/')
     pred_pans_2ch_ = eval_helper_dataset.get_unified_pan_result(
             outputs_pano['all_ssegs'],

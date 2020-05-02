@@ -14,10 +14,18 @@ from mmdet.core import wrap_fp16_model
 from mmdet.datasets import build_dataloader, build_dataset
 from mmdet.models import build_detector
 #### upsnet libraries
-# from tools.config.config import config, update_config
-from upsnet.config.config import config, update_config
-# from tools.dataset import *
-from upsnet.dataset import *
+from tools.config.config import config, update_config
+# from upsnet.config.parse_args import parse_args
+# from lib.utils.logging import create_logger
+# from lib.utils.timer import Timer
+# args = parse_args()
+# logger, final_output_path = create_logger(config.output_path, args.cfg, config.dataset.test_image_set)
+from tools.dataset import *
+#from upsnet.models import *
+#from upsnet.bbox.bbox_transform import bbox_transform, clip_boxes, expand_boxes
+# from lib.utils.callback import Speedometer
+# from lib.utils.data_parallel import DataParallel
+# from pycocotools.mask import encode as mask_encode
 import pickle
 import pdb
 
@@ -57,11 +65,10 @@ def single_gpu_test(model, data_loader, show=False):
             pano_results['all_pano_cls_inds'].append(
                 result[2]['panoptic_cls_inds'].data.cpu().numpy())
             pano_results['all_names'].append(filename)
-            # if has_track
+            #### with Track head output: obj_ids w.r.t. reference frame
             if 'panoptic_det_obj_ids' in result[2]:
                 pano_results['all_pano_obj_ids'].append(
                     result[2]['panoptic_det_obj_ids'].data.cpu().numpy())
-
 
         batch_size = data['img'][0].size(0)
         for _ in range(batch_size):
@@ -76,8 +83,7 @@ def parse_args():
     parser.add_argument('checkpoint', help='checkpoint file')
     parser.add_argument('--out', help='output result file')
     parser.add_argument('--load', action='store_true')
-    parser.add_argument('--has_track', action='store_true')
-    parser.add_argument('--gpus', type=str, default=0 )
+    parser.add_argument('--gpus', type=str, default='0' )
     # parser.add_argument('--track', action='store_true')
     # parser.add_argument('--json_out',help='output result file name without extension', type=str)
     # parser.add_argument('--eval', type=str, nargs='+',
@@ -87,12 +93,23 @@ def parse_args():
     # parser.add_argument('--tmpdir', help='tmp dir for writing some results')
     # parser.add_argument('--launcher', choices=['none', 'pytorch', 'slurm', 'mpi'], default='none', help='job launcher')
     parser.add_argument('--local_rank', type=int, default=0)
-    parser.add_argument('--n_video', type=int, default=10)
+    # parser.add_argument('--n_video', type=int, default=10)
     parser.add_argument('--dataset', type=str, default='Cityscapes')
-    parser.add_argument('--name', type=str, default='demo3')
-    parser.add_argument('--txt_dir', type=str, default='demo3')
+    parser.add_argument('--name', type=str, default='val0429')
+    # parser.add_argument('--txt_dir', type=str, default='demo3')
     parser.add_argument('--test_config', type=str, 
         default='configs/cityscapes/test_cityscapes_1gpu.yaml')
+    
+    # ---- VPQ - specific arguments
+    parser.add_argument('--has_track', action='store_true')
+    parser.add_argument('--n_video', type=int, default=100)
+    parser.add_argument('--txt_dir', type=str, default='val0429')
+
+    parser.add_argument('--pan_gt_folder', type=str, 
+                        default='data/cityscapes_ext/val/panoptic_video_vivid/')
+    parser.add_argument('--pan_gt_json_file', type=str,
+                        default='data/cityscapes_ext/cityscapes_ext_panoptic_val_video.json')
+    # (pan_gt_json_file=None, pan_gt_folder=None)
     
     args, rest = parser.parse_known_args()
     #### update config
@@ -102,7 +119,7 @@ def parse_args():
         os.environ['LOCAL_RANK'] = str(args.local_rank)
     return args
 
-from easydict import EasyDict as edict
+# from easydict import EasyDict as edict
 
 def main():
 
@@ -146,12 +163,13 @@ def main():
     else:
         model.CLASSES = dataset.CLASSES
 
-    # If .pkl and _pano.pkl results are saved already, load = True.
+    # If _mask.pkl & _pano.pkl results are saved already, load = True.
     if args.load:
         outputs_mask = mmcv.load(args.out.replace('.pkl','_mask.pkl'))
         pano_pkl = args.out.replace('.pkl','_pano.pkl')
         outputs_pano = pickle.load(open(pano_pkl, 'rb'))
     else:
+        # TODO: to support multi-gpu inference
         model = MMDataParallel(model, device_ids=[gpus[0]])
         # args.show = False
         outputs_mask, outputs_pano = \
@@ -174,8 +192,7 @@ def main():
     #         flip=False,
     #         result_path=args.out.split('.pkl')[0], 
     #         phase='test')
-
-    eval_helper_dataset = eval(args.dataset)(image_sets=config.dataset.test_image_set.split('+'), flip=False, result_path=args.out.split('.pkl')[0], phase='test')
+    eval_helper_dataset = eval(args.dataset)()
 
 
     # # *******************************************
@@ -183,28 +200,44 @@ def main():
     # # *******************************************
     # print("==> Semantic Segmentation results will be saved at:")
     # print("---", args.out.split('.pkl')[0]+'_ssegs/')
-    # eval_helper_dataset.evaluate_ssegs(outputs_pano['all_ssegs'], args.out.replace('.pkl','_ssegs'), outputs_pano['all_names'])
+    # eval_helper_dataset.evaluate_ssegs(
+    #         outputs_pano['all_ssegs'], 
+    #         args.out.replace('.pkl','_ssegs'), 
+    #         outputs_pano['all_names'])
 
     # *******************************************    
-    # EVAL: PANOPTIC SEGMENTATION
+    # EVAL: VIDEO PANOPTIC SEGMENTATION
     # *******************************************
-    if args.dataset in ["Viper", "CityscapesExt"]:
-        obj_ids = outputs_pano['all_pano_obj_ids'] if args.has_track else None
-        pred_pans_2ch_ = eval_helper_dataset.get_unified_pan_result(outputs_pano['all_ssegs'],outputs_pano['all_panos'], outputs_pano['all_pano_cls_inds'], obj_ids=obj_ids, stuff_area_limit=config.test.panoptic_stuff_area_limit, names=outputs_pano['all_names'])
-    else:
-        pred_pans_2ch_ = eval_helper_dataset.get_unified_pan_result(outputs_pano['all_ssegs'],outputs_pano['all_panos'], outputs_pano['all_pano_cls_inds'], stuff_area_limit=config.test.panoptic_stuff_area_limit, names=outputs_pano['all_names'])
+    print("==> Video Panoptic Segmentation results will be saved at:")
+    print("---", args.out.split('.pkl')[0]+'_pans_unified/')
+
+    obj_ids = outputs_pano['all_pano_obj_ids']
+    pred_pans_2ch_ = eval_helper_dataset.get_unified_pan_result(
+            outputs_pano['all_ssegs'],
+            outputs_pano['all_panos'], 
+            outputs_pano['all_pano_cls_inds'], 
+            obj_ids=obj_ids, 
+            stuff_area_limit=config.test.panoptic_stuff_area_limit, 
+            names=outputs_pano['all_names'])
 
     pred_keys = [_ for _ in pred_pans_2ch_.keys()]
     pred_keys.sort()
+    # pred_keys = pred_keys[4::5]
     pred_pans_2ch = [pred_pans_2ch_[k] for k in pred_keys]
     del pred_pans_2ch_
-    if not os.path.exists(os.path.join(args.out.split('.pkl')[0],args.txt_dir)):
-        os.makedirs(os.path.join(args.out.split('.pkl')[0],args.txt_dir))
-    if args.dataset in["Viper", "CityscapesExt"]:
-        eval_helper_dataset.evaluate_panoptic(pred_pans_2ch, args.out.replace('.pkl','_pans_unified'), is_track=args.has_track, n_video=args.n_video, save_name=os.path.join(args.out.split('.pkl')[0],args.txt_dir))
-    else:
-        eval_helper_dataset.evaluate_panoptic(pred_pans_2ch, args.out.replace('.pkl','_pans_unified'))
-
+    # ******************************
+    # ['0005_0025_frankfurt_000000_001736_newImg8bit.png', '0005_0026_frankfurt_000000_001741_newImg8bit.png', '0005_0027_frankfurt_000000_001746_newImg8bit.png', '0005_0028_frankfurt_000000_001751_leftImg8bit.png']
+    
+    # ******************************
+    # if not osp.exists(osp.join(args.out.split('.pkl')[0],args.txt_dir)):
+    #     os.makedirs(osp.join(args.out.split('.pkl')[0],args.txt_dir))
+    
+    eval_helper_dataset.evaluate_panoptic_video(
+            pred_pans_2ch, args.out.replace('.pkl','_pans_unified'),
+            pan_gt_json_file=args.pan_gt_json_file,
+            pan_gt_folder=args.pan_gt_folder,
+            n_video=args.n_video,
+            save_name=args.txt_dir)
 
 
 if __name__ == '__main__':

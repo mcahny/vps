@@ -393,6 +393,9 @@ def main():
     pred_keys.sort()
     pred_pans_2ch = [pred_pans_2ch_[k] for k in pred_keys]
     del pred_pans_2ch_
+    # ***************
+    # pdb.set_trace()
+    pred_pans_2ch = pred_pans_2ch[4::5]
     if not os.path.exists(os.path.join(args.out.split('.pkl')[0],args.txt_dir)):
         os.makedirs(os.path.join(args.out.split('.pkl')[0],args.txt_dir))
     if args.dataset in["Viper", "CityscapesExt"]:

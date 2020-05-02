@@ -55,15 +55,13 @@ class PanopticTrackFlowTcea(TwoStageDetector):
             test_cfg=test_cfg,
             pretrained=pretrained)
         
-        # ==== dataset-specific class index arrangement ====
         if hasattr(self.train_cfg, 'class_mapping'):
             self.class_mapping = self.train_cfg['class_mapping']
         elif hasattr(self.test_cfg, 'class_mapping'):
             self.class_mapping = self.test_cfg['class_mapping']
         else:
             self.class_mapping = None
-        
-        # ==== panoptic head ====
+        # for panoptic head
         self.seg_term = SegTerm(
                 self.panopticFPN.num_classes, 
                 box_scale=1/4.0,
@@ -85,8 +83,7 @@ class PanopticTrackFlowTcea(TwoStageDetector):
                 num_classes=self.panopticFPN.num_things_classes+1, 
                 nms_thresh=0.5, class_agnostic=True, score_thresh=0.6)
         self.mask_removal = MaskRemoval(fraction_threshold=0.3)
-        
-        # ==== flow module ====
+        # flow module
         if (hasattr(self.train_cfg, 'flownet2') 
             or hasattr(self.test_cfg, 'flownet2')):
             self.mean=[123.675, 116.28, 103.53]
@@ -127,7 +124,7 @@ class PanopticTrackFlowTcea(TwoStageDetector):
         elif H == 200 and W == 400:
             rgbs = F.pad(rgbs,(0,48,0,56))
         # flownet input must be divisible by 64.
-        assert rgbs.size(-2)%64==0 and rgbs.size(-1)%64==0, "Flownet input must be divisible by 64."
+        assert rgbs.size(-2)%64==0 and rgbs.size(-1)%64==0
         self.flownet2.cuda(rgbs.device)
         self.flownet2.eval()
         flow = self.flownet2(rgbs)
@@ -162,7 +159,7 @@ class PanopticTrackFlowTcea(TwoStageDetector):
                       ref_obj_ids=None,
                       gt_pids=None, # gt ids of target objs mapped to reference objs
                       gt_obj_ids=None,
-                      # gt_flow=None,                     
+                      gt_flow=None,                     
                       ):
         # #### DEBUG
         # import matplotlib.pyplot as plt
@@ -599,28 +596,21 @@ class PanopticTrackFlowTcea(TwoStageDetector):
         cls_score, bbox_pred = self.bbox_head(roi_feats)
         img_shape = img_meta[0]['img_shape']
         scale_factor = img_meta[0]['scale_factor']
-
-        ### for Cityscapes_VPS
-        assert 'city' in img_meta[0]['filename'] and 'iid' in img_meta[0]
-        iid = img_meta[0]['iid']
-        # vid = iid // 10000
-        fid = iid % 10000
-        is_first = (fid == 1)
-        # ### for VIPER:
-        # if 'city' in img_meta[0]['filename']:
-        #     #### for CITYSCAPES_EXT:
-        #     if 'iid' in img_meta[0]:
-        #         iid = img_meta[0]['iid']
-        #         # vid = iid // 10000
-        #         fid = iid % 10000
-        #         is_first = (fid == 1)
-        #     else:
-        #         vid = int(img_meta[0]['filename'].split('/')[-1].split('_')[0])
-        #         fid = int(img_meta[0]['filename'].split('/')[-1].split('_')[1])
-        #         is_first = (fid == vid*6 - 5)
-        # else:
-        #     fid = int(img_meta[0]['filename'].split('_')[-1].split('.jpg')[0])
-        #     is_first = (fid==1)
+        ### for VIPER:
+        if 'city' in img_meta[0]['filename']:
+            #### for CITYSCAPES_EXT:
+            if 'iid' in img_meta[0]:
+                iid = img_meta[0]['iid']
+                # vid = iid // 10000
+                fid = iid % 10000
+                is_first = (fid == 1)
+            else:
+                vid = int(img_meta[0]['filename'].split('/')[-1].split('_')[0])
+                fid = int(img_meta[0]['filename'].split('/')[-1].split('_')[1])
+                is_first = (fid == vid*6 - 5)
+        else:
+            fid = int(img_meta[0]['filename'].split('_')[-1].split('.jpg')[0])
+            is_first = (fid==1)
         
         #### For "mask_roi_panoptic"
         cls_prob = F.softmax(cls_score, dim=1)
@@ -702,8 +692,8 @@ class PanopticTrackFlowTcea(TwoStageDetector):
                         self.prev_roi_feats[obj_id] = det_roi_feats[idx]
                         self.prev_bboxes[obj_id] = det_bboxes[idx]
 
-            # Above, rois that are considered redundant are marked "-1".
-            # Here, we assign "NEW" label to all these rois.
+            #### Now, all the proposals considered REDUNDANT are marked "-1"
+            # Here, We assign "NEW" label to all these proposals.
             for idx, det_obj_id in enumerate(det_obj_ids):
                 if det_obj_id >= 0:
                     continue
@@ -742,127 +732,123 @@ class PanopticTrackFlowTcea(TwoStageDetector):
         return segm_result
 
 
-    
-    def simple_test(self, img, img_meta, proposals=None, 
-                    rescale=False, ref_img=None):       
-        """Test without augmentation."""
+    ########################### TEST #######################
+    def simple_test(self, img, img_meta, proposals=None, rescale=False,
+                        ref_img=None, gt_flow=None):
         im_info = np.array([[float(img.shape[2]), float(img.shape[3]), 1.0]])
         # This has not been handled in base.py ...
         if ref_img is not None:
             ref_img=ref_img[0]
-        # if gt_flow is not None:
-        #     gt_flow=gt_flow[0]
+        if gt_flow is not None:
+            gt_flow=gt_flow[0]
+        ####
+        img_clone = img.clone().detach()
+        ref_img_clone = ref_img.clone().detach()
 
-        # ********************************
-        # Initial Flow and Feature Warping
-        # ******************************** 
-        assert hasattr(self.test_cfg, 'flownet2'), "Feature flow must be implemented."
-        flowR2T, _ = self.compute_flow(img.clone(), ref_img.clone(),
-                scale_factor=0.25)
+        if hasattr(self.test_cfg, 'flownet2'):
+            flowR2T, occ_mask = self.compute_flow(img.clone(), ref_img.clone(), scale_factor=0.25)
+        else:
+            flowR2T = None
+
+        """Test without augmentation."""
+        assert self.with_bbox, "Bbox head must be implemented."
+        assert self.with_track, "Track head must be implemented"
+        assert proposals is None
+        
         x = self.extract_feat(img)
         ref_x = self.extract_feat(ref_img)
+
+        # x, flow_fine = self.extra_neck(x, ref_x, flowR2T)
         x = self.extra_neck(x, ref_x, flowR2T)
 
-        # **********************************
-        # FCN Semantic Head forward test
-        # **********************************
-        assert hasattr(self, 'panopticFPN') and self.panopticFPN is not None, "FCN HEAD must be implemented."
-        fcn_output, fcn_score = self.panopticFPN(
-                x[0:self.panopticFPN.num_levels])
+        assert hasattr(self, 'panopticFPN') and self.panopticFPN is not None, \
+                "FCN HEAD must be implemented."
+        fcn_output, fcn_score = self.panopticFPN(x[0:self.panopticFPN.num_levels])
 
-        # ***************************
-        # RPN forward test
-        # ***************************
-        assert proposals is None
         proposal_list = self.simple_test_rpn(
             x, img_meta, self.test_cfg.rpn) 
 
-        # *******************************
-        # bbox head forward test
-        # *******************************
-        assert self.with_bbox, "Bbox head must be implemented."
-        assert self.with_track, "Track head must be implemented."
-        det_bboxes, det_labels, det_obj_ids, best_match_scores, cls_score, bbox_pred, cls_prob, mask_rois, cls_idx = \
-                self.simple_test_bboxes(
-                        x, img_meta, proposal_list, 
-                        self.test_cfg.rcnn, im_info,
-                        rescale=rescale, is_panoptic=True)   
+        det_bboxes, det_labels, det_obj_ids, best_match_scores, cls_score, bbox_pred, cls_prob, mask_rois, cls_idx =  self.simple_test_bboxes(
+                x, img_meta, proposal_list, self.test_cfg.rcnn, im_info,
+                rescale=rescale, 
+                is_panoptic=True)   
+        # det_bboxes, det_labels, det_obj_ids, best_match_scores, cls_score, bbox_pred, cls_prob, mask_rois, cls_idx = self.simple_test_bboxes_flow(
+        #         x, img_meta, proposal_list, self.test_cfg.rcnn, im_info,
+        #         rescale=rescale, 
+        #         is_panoptic=True,
+        #         fcn_score=fcn_score,
+        #         flow=flowR2T)
 
         bbox_results = bbox2result_with_id(det_bboxes, det_labels,
             det_obj_ids, self.bbox_head.num_classes)
 
-        # *******************************    
-        # mask head forward test
-        # *******************************
-        assert self.with_bbox, "Mask head must be implemented."
-        mask_results = self.simple_test_mask(
+        if not self.with_mask:
+            return bbox_results
+        else:
+            segm_results = self.simple_test_mask(
                 x, img_meta, det_bboxes, det_labels, 
                 rescale=rescale, det_obj_ids=det_obj_ids)
 
-        # *******************************
-        # Panoptic head forward test
-        # *******************************
-        assert hasattr(self, 'panopticFPN') and self.panopticFPN is not None
-        assert hasattr(self.test_cfg, 'loss_pano_weight')
-        mask_feats = self.mask_roi_extractor(
-                x[:self.mask_roi_extractor.num_inputs], mask_rois)
-                # [#bbox,256,14,14]
-        mask_score = self.mask_head(mask_feats) 
-        # [#bbox,#things+1,28,28], # things+1=9 (Cityscapes-thing)
-        nobj,_,H,W = mask_score.shape
-        mask_score = mask_score.gather(1, 
-                cls_idx.view(-1,1,1,1).expand(-1,-1,H,W)) 
-                # [#bbox,1,28,28]
+            #### test with panoptic segm
+            if hasattr(self, 'panopticFPN') and self.panopticFPN is not None:
+                if hasattr(self.test_cfg, 'loss_pano_weight'):
+                    # fcn_output, fcn_score = self.panopticFPN(x[0:self.panopticFPN.num_levels])
 
-        # compute panoptic logits
-        keep_inds, mask_logits = self.mask_removal(
-                mask_rois[:,1:], cls_prob,mask_score, cls_idx, 
-                fcn_output.shape[2:])
-        # convert det_obj_ids to torch tensor
-        det_obj_ids = torch.from_numpy(det_obj_ids).to(cls_idx.device)
-        # mask logits [1,k,1024,2048]
-        mask_rois = mask_rois[keep_inds] #[k,5]
-        cls_idx = cls_idx[keep_inds] #[k]
-        det_labels = det_labels[keep_inds] #[k]
-        det_obj_ids = det_obj_ids[keep_inds] #[k]
-        cls_prob = cls_prob[keep_inds] #[k]
-        #### filter out redundant detection
-        # best_inds = torch.index_select(det_obj_ids>=0, 0, 
-        #         torch.arange(0,det_obj_ids.size(0)).cuda())
-        # mask_rois = mask_rois[best_inds] #[k',5]
-        # cls_idx = cls_idx[best_inds] #[k']
-        # det_labels = det_labels[best_inds] #[k']
-        # det_obj_ids = det_obj_ids[best_inds] #[k']
-        # cls_prob = cls_prob[best_inds] #[k']
-        # mask_logits = mask_logits[:,best_inds] # [k']
+                    mask_feats = self.mask_roi_extractor(
+                            x[:self.mask_roi_extractor.num_inputs], mask_rois)
+                            # [#bbox,256,14,14]
+                    mask_score = self.mask_head(mask_feats) # [#bbox,#things+1,28,28], #things+1=9
+                    nobj,_,H,W = mask_score.shape
+                    mask_score = mask_score.gather(1, cls_idx.view(-1,1,1,1).expand(-1,-1,H,W)) # [#bbox,1,28,28]
+                    # compute panoptic logits
+                    keep_inds, mask_logits = self.mask_removal(mask_rois[:,1:], cls_prob,mask_score, cls_idx, fcn_output.shape[2:])
+                    # convert det_obj_ids to torch tensor
+                    det_obj_ids = torch.from_numpy(det_obj_ids).to(cls_idx.device)
+                    # mask logits [1,k,1024,2048]
+                    mask_rois = mask_rois[keep_inds] #[k,5]
+                    cls_idx = cls_idx[keep_inds] #[k]
+                    det_labels = det_labels[keep_inds] #[k]
+                    det_obj_ids = det_obj_ids[keep_inds] #[k]
+                    cls_prob = cls_prob[keep_inds] #[k]
+                    #### filter out redundant detection
+                    # best_inds = torch.index_select(det_obj_ids>=0, 0, torch.arange(0,det_obj_ids.size(0)).cuda())
+                    # mask_rois = mask_rois[best_inds] #[k',5]
+                    # cls_idx = cls_idx[best_inds] #[k']
+                    # det_labels = det_labels[best_inds] #[k']
+                    # det_obj_ids = det_obj_ids[best_inds] #[k']
+                    # cls_prob = cls_prob[best_inds] #[k']
+                    # mask_logits = mask_logits[:,best_inds] # [k']
 
-        # get semantic segm logits
-        seg_stuff_logits, seg_inst_logits = self.seg_term(cls_idx, fcn_output, mask_rois*4.0)
-        # seg_stuff_logits [1,11,1024,2048]
-        # seg_inst_logits [1,k,1024,2048]
-        panoptic_logits = torch.cat([seg_stuff_logits, 
-                (seg_inst_logits + mask_logits)], dim=1)
-        panoptic_output = torch.max(
-                F.softmax(panoptic_logits, dim=1), dim=1)[1]
-        # fcn_output [1,1024,2048]
-        fcn_output = torch.max(F.softmax(fcn_output, dim=1), dim=1)[1]
-        # trim out the padded boundaries --> original input shape
-        img_shape_withoutpad = img_meta[0]['img_shape']
-        fcn_output = fcn_output[:,0:img_shape_withoutpad[0],0:img_shape_withoutpad[1]]
-        panoptic_output = panoptic_output[:,0:img_shape_withoutpad[0],0:img_shape_withoutpad[1]]
-        pano_results = {
-            'fcn_outputs': fcn_output,
-            'panoptic_cls_inds': cls_idx,
-            'panoptic_cls_prob': cls_prob,
-            'panoptic_det_labels': det_labels,
-            'panoptic_det_obj_ids': det_obj_ids,
-            'panoptic_outputs': panoptic_output,
-        }
-        return bbox_results, mask_results, pano_results
+                    # get semantic segm logits
+                    seg_stuff_logits, seg_inst_logits = self.seg_term(cls_idx, fcn_output, mask_rois*4.0)
+                    # seg_stuff_logits [1,11,1024,2048]
+                    # seg_inst_logits [1,k,1024,2048]
+                    panoptic_logits = torch.cat([seg_stuff_logits, 
+                            (seg_inst_logits + mask_logits)], dim=1)
+                    panoptic_output = torch.max(F.softmax(panoptic_logits, dim=1), dim=1)[1]
+                    # fcn_output [1,1024,2048]
+                    fcn_output = torch.max(F.softmax(fcn_output, dim=1), dim=1)[1]
 
+                    #### crop back into original input shape
+                    img_shape_withoutpad = img_meta[0]['img_shape']
+                    fcn_output = fcn_output[:,0:img_shape_withoutpad[0],0:img_shape_withoutpad[1]]
+                    panoptic_output = panoptic_output[:,0:img_shape_withoutpad[0],0:img_shape_withoutpad[1]]
 
-
-
+                    pano_results = {
+                        'fcn_outputs': fcn_output,
+                        'panoptic_cls_inds': cls_idx,
+                        'panoptic_cls_prob': cls_prob,
+                        'panoptic_det_labels': det_labels,
+                        'panoptic_det_obj_ids': det_obj_ids,
+                        'panoptic_outputs': panoptic_output,
+                    }
+                    return bbox_results, segm_results, pano_results
+                # normal
+                else:
+                    semantic_results = self.simple_test_semantic_segm(x, img_meta)
+                    return bbox_results, segm_results, semantic_results
+                
+            return bbox_results, segm_results
 
     def aug_test(self, imgs, img_metas, rescale=False,
                     img_ref=None, gt_flow=None):

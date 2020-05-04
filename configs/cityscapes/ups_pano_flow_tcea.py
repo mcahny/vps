@@ -194,7 +194,7 @@ data = dict(
     val=dict(
         type=dataset_type,
         ann_file=data_root +
-        'annotations/instancesonly_gtFine_val.json',
+        'annotations/instancesonly_pano_gtFine_val.json',
         img_prefix=data_root + 'val/',
         pipeline=test_pipeline),
     test=dict(

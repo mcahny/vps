@@ -17,6 +17,7 @@ Official pytorch implementation for "Video Panoptic Segmentation" (CVPR 2020 Ora
 ```
 
 <img src="./image/panoptic_pair_240.gif" width="800"> 
+
 Image-level baseline (left) / **VPSNet** result (right)
 
 ## Disclaimer

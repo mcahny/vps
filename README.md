@@ -115,4 +115,4 @@ If you use this toolbox or benchmark in your research, please cite this project.
 
 ## Contact
 
-If you have any questions regarding the repo, please contact Dahun Kim (mcahny01@gmail.com / mcahny@kaist.ac.kr) or create an issue.
+If you have any questions regarding the repo, please contact Dahun Kim (mcahny01@gmail.com) or create an issue.

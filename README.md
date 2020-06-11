@@ -8,11 +8,10 @@ Official pytorch implementation for "Video Panoptic Segmentation" (CVPR 2020 Ora
 [[Paper](https://arxiv.org/abs/1905.01639)] [[Project page](https://sites.google.com/view/deepvinet/)] [[Video results](https://youtu.be/RtThGNTvkjY)]  
 
 ```bibtex
-@inproceedings{kim2019vps,
+@inproceedings{kim2020vps,
   title={Video Panoptic Segmentation},
-  author={Kim, Dahun and Woo, Sanghyun and Lee, Joon-Young and So Kweon, In},
+  author={Dahun Kim and Sanghyun Woo and Joon-Young Lee and In So Kweon},
   booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition},
-  pages={},
   year={2020},}
 ```
 
@@ -105,13 +104,17 @@ A json file containing the predicted result will be generated as `pred.json` and
 If you use this toolbox or benchmark in your research, please cite this project.
 
 ```bibtex
-@inproceedings{kim2019vps,
+@inproceedings{kim2020vps,
   title={Video Panoptic Segmentation},
-  author={Kim, Dahun and Woo, Sanghyun and Lee, Joon-Young and So Kweon, In},
+  author={Dahun Kim and Sanghyun Woo and Joon-Young Lee and In So Kweon},
   booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition},
-  pages={},
   year={2020},}
 ```
+## Terms of Use
+
+This software is for non-commercial use only.
+The source code is released under the Attribution-NonCommercial-ShareAlike (CC BY-NC-SA) Licence
+(see [this](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode) for details)
 
 ## Contact
 

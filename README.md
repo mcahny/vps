@@ -12,7 +12,8 @@ Official pytorch implementation for "Video Panoptic Segmentation" (CVPR 2020 Ora
   title={Video Panoptic Segmentation},
   author={Dahun Kim and Sanghyun Woo and Joon-Young Lee and In So Kweon},
   booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition},
-  year={2020},}
+  year={2020}
+}
 ```
 
 <img src="./image/panoptic_pair_240.gif" width="800"> 
@@ -108,7 +109,8 @@ If you use this toolbox or benchmark in your research, please cite this project.
   title={Video Panoptic Segmentation},
   author={Dahun Kim and Sanghyun Woo and Joon-Young Lee and In So Kweon},
   booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition},
-  year={2020},}
+  year={2020}
+}
 ```
 ## Terms of Use
 

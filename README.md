@@ -55,19 +55,28 @@ Please refer to [dataset.md](docs/DATASET.md) for dataset preparation.
 ## Testing
 Our trained models are available for download at Google Drive. Run the following command to test the model on Cityscapes and Cityscapes-VPS.
 
-a. Test Image Panoptic Quality on Cityscapes.
+a. Image Panoptic Quality on Cityscapes.
 ```
 python tools/test_eval_ipq.py configs/cityscapes/ups_pano_flow_tcea.py ./work_dirs/cityscapes/ups_pano_flow_tcea_vp/latest.pth --out work_dirs/cityscapes/ups_pano_flow_tcea_vp/val.pkl --dataset Cityscapes --name val --gpus 0
 ```
-b. Test Video Panoptic Quality (VPQ) on Cityscapes-VPS.
+b. Video Panoptic Quality (VPQ) on Cityscapes-VPS.
 ```
-python tools/test_vpq.py configs/cityscapes/ups_pano_ext_track_flow_tcea.py work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/latest.pth --out work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/val_unified_.pkl --name val --dataset CityscapesExt --txt_dir val --has_track --n_video 100
-python tools/eval_vpq.py configs/cityscapes/ups_pano_ext_track_flow_tcea.py work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/latest.pth --out work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/val_unified_.pkl --name val --dataset CityscapesExt --txt_dir val --has_track --n_video 100
+python tools/test_vpq.py \
+    configs/cityscapes/ups_pano_ext_track_flow_tcea.py \
+    work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/latest.pth \
+    --out work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/val_unified_.pkl \
+    --name val --dataset CityscapesExt --txt_dir val \
+    --has_track --n_video 100
+python tools/eval_vpq.py \
+    configs/cityscapes/ups_pano_ext_track_flow_tcea.py \
+    work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/latest.pth \
+    --out work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/val_unified_.pkl \
+    --name val --dataset CityscapesExt --txt_dir val \
+    --has_track --n_video 100
 ```
 Files containing the predicted results will be generated as `pred.json` and `pan/*.png` at  `work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/val_pans_unified/`. 
 
-Cityscapes-VPS `test` split currently only allows evaluation on the codalab server. Please upload `submission.zip` to codalab server to see actual performances.
-
+c. Cityscapes-VPS `test` split currently only allows evaluation on the codalab server. Please upload `submission.zip` to codalab server to see actual performances.
 ```
 submission.zip
 ├── pred.json
@@ -80,14 +89,13 @@ submission.zip
 
 
 ## Training
-You can use following commands to train Fuse and FuseTrack models.
 a. Train Fuse model on image-level Cityscapes.
 ```
-bash ./tools/dist_train.sh configs/cityscapes/ups_pano_flow_tcea.py 8
+bash ./tools/dist_train.sh configs/cityscapes/ups_pano_flow_tcea.py ${GPU_NUM}
 ```
 b. Train FuseTrack model on video-level Cityscapes-VPS.
 ```
-bash ./tools/dist_train.sh configs/cityscapes/ups_pano_ext_track_flow_tcea.py 8
+bash ./tools/dist_train.sh configs/cityscapes/ups_pano_ext_track_flow_tcea.py ${GPU_NUM}
 ```
 
 

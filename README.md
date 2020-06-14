@@ -57,7 +57,11 @@ Our trained models are available for download at Google Drive. Run the following
 
 a. Image Panoptic Quality on Cityscapes.
 ```
-python tools/test_eval_ipq.py configs/cityscapes/ups_pano_flow_tcea.py ./work_dirs/cityscapes/ups_pano_flow_tcea_vp/latest.pth --out work_dirs/cityscapes/ups_pano_flow_tcea_vp/val.pkl --dataset Cityscapes --name val --gpus 0
+python tools/test_eval_ipq.py \
+    configs/cityscapes/ups_pano_flow_tcea.py \
+    work_dirs/cityscapes/ups_pano_flow_tcea_vp/latest.pth \
+    --out work_dirs/cityscapes/ups_pano_flow_tcea_vp/val.pkl \
+    --dataset Cityscapes --name val --gpus 0
 ```
 b. Video Panoptic Quality (VPQ) on Cityscapes-VPS.
 ```
@@ -65,14 +69,12 @@ python tools/test_vpq.py \
     configs/cityscapes/ups_pano_ext_track_flow_tcea.py \
     work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/latest.pth \
     --out work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/val_unified_.pkl \
-    --name val --dataset CityscapesExt --txt_dir val \
-    --has_track --n_video 100
+    --name val --dataset CityscapesExt --txt_dir val --has_track --n_video 100
 python tools/eval_vpq.py \
     configs/cityscapes/ups_pano_ext_track_flow_tcea.py \
     work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/latest.pth \
     --out work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/val_unified_.pkl \
-    --name val --dataset CityscapesExt --txt_dir val \
-    --has_track --n_video 100
+    --name val --dataset CityscapesExt --txt_dir val --has_track --n_video 100
 ```
 Files containing the predicted results will be generated as `pred.json` and `pan/*.png` at  `work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/val_pans_unified/`. 
 

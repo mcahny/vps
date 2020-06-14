@@ -48,37 +48,9 @@ bash ./download_weights.sh
 ```
 
 ## Dataset
-1. Download Cityscapes-VPS from here.
-2. Symlink the `$DATA_ROOT` dataset to `$MMDETECTION/data` folder. 
-```
-mmdetection
-├── mmdet
-├── tools
-├── configs
-├── data
-│   ├── cityscapes
-│   │   ├── annotations
-│   │   │   ├── instancesonly_gtFine_train.json
-│   │   │   ├── instancesonly_pano_gtFine_val.json
-│   │   │   ├── cityscapes_fine_val.json
-│   │   ├── panoptic
-│   │   ├── train
-│   │   ├── train_nbr
-│   │   ├── labels
-│   │   ├── val
-│   │   ├── val_nbr
-│   ├── cityscapes_ext
-│   │   ├── instances_train_01_city_coco_rle.json
-│   │   ├── instances_val_01_city_coco_rle.json
-│   │   ├── instances_val_01_im_info.json
-│   │   ├── cityscapes_ext_panoptic_val_video.json
-│   │   ├── train
-│   │   │   ├── img
-│   │   │   ├── labelmap
-│   │   ├── val
-│   │   │   ├── img_all
-│   │   │   ├── panoptic_video_vivid
-```
+Our Cityscapes-VPS dataset is also a super-set of video semantic segmentation and video instance segmentation.
+Please refer to [dataset.md](docs/dataset.md) for dataset preparation.
+
 
 ## Testing
 Our trained model is available for download at Google Drive. Run the following command to test the model on Cityscapes and Cityscapes-VPS.

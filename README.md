@@ -51,6 +51,32 @@ bash ./download_weights.sh
 Cityscapes-VPS dataset is also a super-set of video semantic segmentation and video instance segmentation.
 Please refer to [DATASET.md](docs/DATASET.md) for dataset preparation.
 
+Necessary data for VPS training, testing, and evaluation are as follows. 
+```
+mmdetection
+├── mmdet
+├── tools
+├── configs
+├── data
+│   ├── cityscapes_vps
+│   │   ├── panoptic_im_train_city_vps.json
+│   │   ├── panoptic_im_val_city_vps.json
+│   │   ├── panoptic_im_test_city_vps.json  
+│   │   ├── instances_train_city_vps_rle.json (for training)
+│   │   ├── instances_val_city_vps_rle.json 
+│   │   ├── im_all_info_val_city_vps.json (for inference)
+│   │   ├── im_all_info_test_city_vps.json (for inference)
+│   │   ├── panoptic_gt_val_city_vps.json (for VPQ eval)
+│   │   ├── train 
+│   │   │   ├── img
+│   │   │   ├── labelmap
+│   │   ├── val
+│   │   │   ├── img
+│   │   │   ├── img_all
+│   │   │   ├── panoptic_video
+│   │   ├── test
+│   │   │   ├── img_all
+```
 
 ## Testing
 Our trained models are available for download at Google Drive. Run the following command to test the model on Cityscapes and Cityscapes-VPS.

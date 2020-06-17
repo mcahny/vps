@@ -50,7 +50,6 @@ mmdetection
 │   │   │   ├── img_all
 │   │   │   ├── panoptic_video
 │   │   ├── test
-│   │   │   ├── img
 │   │   │   ├── img_all
 ```
 

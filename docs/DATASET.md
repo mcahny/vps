@@ -26,7 +26,7 @@ python prepare_city_vps/create_panoptic_video_labels.py --root_dir $CITY_VPS --m
 ```
 
 ### Directory Structure
-Necessary data for training, testing, and evaluation are as follows.
+Necessary data for training, testing, and evaluation are as follows. You may delete other data for disk usage.
 ```
 mmdetection
 ├── mmdet

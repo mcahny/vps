@@ -7,15 +7,15 @@ import os.path as osp
 from PIL import Image
 import numpy as np
 sys.path.append('../')
-from pycococreatortools import pycococreatortools
-from pycocotools import mask
+# from pycococreatortools import pycococreatortools
+# from pycocotools import mask
 # import matplotlib.pyplot as plt
 
 from city_default import CATEGORIES, INFO, LICENSES
 # from merge_json import merge_json_files
 import argparse
 import shutil
-import gc
+# import gc
 import time
 import multiprocessing
 # import matplotlib.pyplot as plt

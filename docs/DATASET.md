@@ -24,9 +24,6 @@ python prepare_city_vps/merge_datasets.py --src_dir data/gtFine/val/ --dst_dir $
 ### Create panoptic labels
 a. Create `labelmap/`, `panoptic_inst/`, and `panoptic_video/` in `$CITY_VPS/SPLIT/` by running following commands.
 ```
-cd prepare_city_vps
-pip install .
-cd ..
 python prepare_city_vps/create_panoptic_labels.py --root_dir $CITY_VPS --mode SPLIT
 python prepare_city_vps/create_panoptic_video_labels.py --root_dir $CITY_VPS --mode SPLIT
 

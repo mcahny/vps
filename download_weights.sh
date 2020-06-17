@@ -1,16 +1,16 @@
 mkdir -p work_dirs/flownet
-mkdir -p work_dirs/cityscapes/ups_pano_flow_tcea_vp
-mkdir -p work_dirs/viper/ups_pano_flow_tcea
+mkdir -p work_dirs/cityscapes/fuse_vpct
+mkdir -p work_dirs/viper/fuse
 
 # download trained weight
 cd work_dirs/flownet
 gdown https://drive.google.com/uc?id=1hF8vS6YeHkx3j2pfCeQqqZGwA_PJq_Da
 
-cd ../cityscapes/ups_pano_flow_tcea_vp
+cd ../cityscapes/fuse_vpct
 gdown https://drive.google.com/uc?id=1t69I1u0QKl-N4eciYv3UYXFOQSYb25cD
 mv cityscapes_fuse_latest.pth latest.pth
 
-cd ../../viper/ups_pano_flow_tcea
+cd ../../viper/fuse
 gdown https://drive.google.com/uc?id=1_4Np8-rBGHchL2nU1sOjK3mwnLX9asZC
 mv viper_fuse_latest.pth latest.pth
 

@@ -1,25 +1,12 @@
-# ---------------------------------------------------------------------------
-# Unified Panoptic Segmentation Network
-#
-# Copyright (c) 2018-2019 Uber Technologies, Inc.
-#
-# Licensed under the Uber Non-Commercial License (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at the root directory of this project. 
-#
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# 
-# Written by Yuwen Xiong, Hengshuang Zhao
-# ---------------------------------------------------------------------------
+# -------------------------------------------------------------------
+# Modified from the evaluation code in Unified Panoptic Segmentation Network https://github.com/uber-research/UPSNet
+# ------------------------------------------------------------------
 
 from __future__ import print_function
-
 import os
 import sys
 import torch
 import torch.utils.data
-
 import pickle, gzip
 import numpy as np
 import scipy.io as sio
@@ -29,18 +16,12 @@ import torch.multiprocessing as multiprocessing
 import time
 from PIL import Image, ImageDraw
 from collections import defaultdict, Sequence
-# from pycocotools.cocoeval import COCOeval
 from pycocotools.coco import COCO
-
 from tools.config.config import config
-# from upsnet.rpn.assign_anchor import add_rpn_blobs
-# from upsnet.bbox import bbox_transform
-# from upsnet.bbox.sample_rois import sample_rois
 import networkx as nx
 from lib.utils.logging import logger
-
 import pycocotools.mask as mask_util
-import pdb
+
 # panoptic visualization
 vis_panoptic = False
 
@@ -84,13 +65,9 @@ class PQStat():
             fp = self.pq_per_cat[label].fp
             fn = self.pq_per_cat[label].fn
             if tp + fp + fn == 0:
-                # per_class_results[label] = {'pq': 0.0, 'sq': 0.0, 'rq': 0.0}
+
                 per_class_results[label] = {'pq': 0.0, 'sq': 0.0, 'rq': 0.0, 'iou': 0.0, 'tp':0, 'fp':0, 'fn':0}
                 continue
-            # ####
-            # if label == 11 or label == 24:
-            #     per_class_results[label] = {'pq': 0.0, 'sq': 0.0, 'rq': 0.0, 'iou': 0.0, 'tp':0, 'fp':0, 'fn':0}
-            #     continue
             n += 1
             pq_class = iou / (tp + 0.5 * fp + 0.5 * fn)
             sq_class = iou / tp if tp != 0 else 0
@@ -99,7 +76,6 @@ class PQStat():
             pq += pq_class
             sq += sq_class
             rq += rq_class
-            # print('isthing:',isthing, 'cat:',label_info['name'], 'pq:', pq_class)
 
         return {'pq': pq / n, 'sq': sq / n, 'rq': rq / n, 'n': n}, per_class_results
 
@@ -192,7 +168,7 @@ class BaseDataset(torch.utils.data.Dataset):
             workers.close()
             workers.join()
 
-        def pq_compute(gt_jsons, pred_jsons, gt_pans, pred_pans, categories):
+        def pq_compute(gt_jsons, pred_jsons, gt_pans, pred_pans, categories, output_dir):
             start_time = time.time()
             # from json and from numpy
             gt_image_jsons = gt_jsons['images']
@@ -219,17 +195,29 @@ class BaseDataset(torch.utils.data.Dataset):
                 if name == 'All':
                     results['per_class'] = per_class_results
 
-            print("{:10s}| {:>5s}  {:>5s}  {:>5s} {:>5s}".format("", "PQ", "SQ", "RQ", "N"))
-            print("-" * (10 + 7 * 4))
+            pq_all = 100 * results['All']['pq']
+            pq_thing = 100 * results['Things']['pq']
+            pq_stuff = 100 * results['Stuff']['pq']
+
+            save_name = os.path.join(output_dir, 'pq.txt')
+            f = open(save_name, 'w') if save_name else None
+            f.write("================================================\n")
+            f.write("{:10s}| {:>5s}  {:>5s}  {:>5s} {:>5s}".format("", "PQ", "SQ", "RQ", "N\n"))
+            f.write("-" * (10 + 7 * 4)+'\n')
             for name, _isthing in metrics:
-                print("{:10s}| {:5.1f}  {:5.1f}  {:5.1f} {:5d}".format(name, 100 * results[name]['pq'], 100 * results[name]['sq'], 100 * results[name]['rq'], results[name]['n']))
-
-            print("{:4s}| {:>5s} {:>5s} {:>5s} {:>6s} {:>7s} {:>7s} {:>7s}".format("IDX", "PQ", "SQ", "RQ", "IoU", "TP", "FP", "FN"))
+                f.write("{:10s}| {:5.1f}  {:5.1f}  {:5.1f} {:5d}\n".format(name, 100 * results[name]['pq'], 100 * results[name]['sq'], 100 * results[name]['rq'], results[name]['n']))
+            f.write("{:4s}| {:>5s} {:>5s} {:>5s} {:>6s} {:>7s} {:>7s} {:>7s}\n".format("IDX", "PQ", "SQ", "RQ", "IoU", "TP", "FP", "FN"))
             for idx, result in results['per_class'].items():
-                print("{:4d} | {:5.1f} {:5.1f} {:5.1f} {:6.1f} {:7d} {:7d} {:7d}".format(idx, 100 * result['pq'], 100 * result['sq'], 100 * result['rq'], result['iou'], result['tp'], result['fp'], result['fn']))
-
+                f.write("{:4d} | {:5.1f} {:5.1f} {:5.1f} {:6.1f} {:7d} {:7d} {:7d}\n".format(idx, 100 * result['pq'], 100 * result['sq'], 100 * result['rq'], result['iou'], result['tp'], result['fp'], result['fn']))
+            if save_name:
+                f.close()
+            
             t_delta = time.time() - start_time
+            print("PQ_All:", pq_all)
+            print("PQ_Thing:", pq_thing)
+            print("PQ_Stuff:", pq_stuff)
             print("Time elapsed: {:0.2f} seconds".format(t_delta))
+            
             return results
 
         gt_pans, gt_json, categories, color_gererator = get_gt()
@@ -238,12 +226,13 @@ class BaseDataset(torch.utils.data.Dataset):
         save_image(pred_pans, os.path.join(output_dir, 'pan'), gt_json)
         json.dump(gt_json, open(os.path.join(output_dir, 'gt.json'), 'w'))
         json.dump(pred_json, open(os.path.join(output_dir, 'pred.json'), 'w'))
-        results = pq_compute(gt_json, pred_json, gt_pans, pred_pans, categories)
+        results = pq_compute(gt_json, pred_json, gt_pans, pred_pans, categories, output_dir)
 
         return results
 
+
     def get_unified_pan_result(self, segs, pans, cls_inds, stuff_area_limit=4 * 64 * 64, names=None):
-        # pred_pans_2ch = []
+
         pred_pans_2ch = {}
         for (seg, pan, cls_ind, name) in zip(segs, pans, cls_inds,names):
             pan_seg = pan.copy()
@@ -252,7 +241,8 @@ class BaseDataset(torch.utils.data.Dataset):
             ids = np.unique(pan)
             ids_ins = ids[ids > id_last_stuff] 
             pan_ins[pan_ins <= id_last_stuff] = 0
-            for idx, id in enumerate(ids_ins): # inst: 11 ~ 11+#
+            
+            for idx, id in enumerate(ids_ins): 
                 region = (pan_ins == id)
                 if id == 255:
                     pan_seg[region] = 255
@@ -281,13 +271,10 @@ class BaseDataset(torch.utils.data.Dataset):
             pan_2ch = np.zeros((pan.shape[0], pan.shape[1], 3), dtype=np.uint8)
             pan_2ch[:, :, 0] = pan_seg
             pan_2ch[:, :, 1] = pan_ins
-            # pred_pans_2ch.append(pan_2ch)
             pred_pans_2ch[name]=pan_2ch
         return pred_pans_2ch
 
     
-
-
     @staticmethod
     def _load_image_single_core(proc_id, files_set, folder):
         images = []
@@ -356,8 +343,7 @@ class BaseDataset(torch.utils.data.Dataset):
         pq_stat = PQStat()
 
         for idx, (gt_json, pred_json, gt_pan, pred_pan, gt_image_json) in enumerate(zip(gt_jsons_set, pred_jsons_set, gt_pans_set, pred_pans_set, gt_image_jsons_set)):
-            # if idx % 100 == 0:
-            #     logger.info('Compute pq -> Core: {}, {} from {} images processed'.format(proc_id, idx, len(gt_jsons_set)))
+
             gt_pan, pred_pan = np.uint32(gt_pan), np.uint32(pred_pan)
             pan_gt = gt_pan[:, :, 0] + gt_pan[:, :, 1] * 256 + gt_pan[:, :, 2] * 256 * 256
             pan_pred = pred_pan[:, :, 0] + pred_pan[:, :, 1] * 256 + pred_pan[:, :, 2] * 256 * 256
@@ -444,7 +430,6 @@ class BaseDataset(torch.utils.data.Dataset):
                     continue
                 pq_stat[pred_info['category_id']].fp += 1
                 fp += 1
-        # logger.info('Compute pq -> Core: {}, all {} images processed'.format(proc_id, len(gt_jsons_set)))
         return pq_stat
 
     @staticmethod

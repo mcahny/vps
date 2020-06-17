@@ -1,33 +1,19 @@
+
 import argparse
 import os
 import os.path as osp
-import shutil
-import tempfile
 import numpy as np
-import matplotlib.pyplot as plt
 import mmcv
 import torch
 from mmcv.parallel import MMDataParallel
 from mmcv.runner import load_checkpoint
-# from mmdet.apis import init_dist
 from mmdet.core import wrap_fp16_model
 from mmdet.datasets import build_dataloader, build_dataset
 from mmdet.models import build_detector
 #### upsnet libraries
 from tools.config.config import config, update_config
-# from upsnet.config.parse_args import parse_args
-# from lib.utils.logging import create_logger
-# from lib.utils.timer import Timer
-# args = parse_args()
-# logger, final_output_path = create_logger(config.output_path, args.cfg, config.dataset.test_image_set)
 from tools.dataset import *
-#from upsnet.models import *
-#from upsnet.bbox.bbox_transform import bbox_transform, clip_boxes, expand_boxes
-# from lib.utils.callback import Speedometer
-# from lib.utils.data_parallel import DataParallel
-# from pycocotools.mask import encode as mask_encode
 import pickle
-import pdb
 
 
 def single_gpu_test(model, data_loader, show=False):
@@ -55,7 +41,6 @@ def single_gpu_test(model, data_loader, show=False):
 
         # panoptic results
         if len(result)>=3:
-            
             pano_results['all_ssegs'].append(
                 result[2]['fcn_outputs'].data.cpu(
                     ).numpy()[0].astype(np.uint8))
@@ -78,33 +63,17 @@ def parse_args():
     parser.add_argument('config', help='test config file path')
     parser.add_argument('checkpoint', help='checkpoint file')
     parser.add_argument('--out', help='output result file')
+    parser.add_argument('--dataset', type=str, default='Cityscapes')
     parser.add_argument('--load', action='store_true')
     parser.add_argument('--gpus', type=str, default='0' )
-    # parser.add_argument('--track', action='store_true')
-    # parser.add_argument('--json_out',help='output result file name without extension', type=str)
-    # parser.add_argument('--eval', type=str, nargs='+',
-    #     choices=['proposal', 'proposal_fast', 'bbox', 'segm', 'keypoints',
-    #     'semantic_segm'],  help='eval types')
-    # parser.add_argument('--show', action='store_true', help='show results')
-    # parser.add_argument('--tmpdir', help='tmp dir for writing some results')
-    # parser.add_argument('--launcher', choices=['none', 'pytorch', 'slurm', 'mpi'], default='none', help='job launcher')
-    parser.add_argument('--local_rank', type=int, default=0)
-    # parser.add_argument('--n_video', type=int, default=10)
-    parser.add_argument('--dataset', type=str, default='Cityscapes')
-    parser.add_argument('--name', type=str, default='demo3')
-    # parser.add_argument('--txt_dir', type=str, default='demo3')
     parser.add_argument('--test_config', type=str, 
         default='configs/cityscapes/test_cityscapes_1gpu.yaml')
-    
     args, rest = parser.parse_known_args()
     #### update config
     update_config(args.test_config)
     args = parser.parse_args()
-    if 'LOCAL_RANK' not in os.environ:
-        os.environ['LOCAL_RANK'] = str(args.local_rank)
     return args
 
-# from easydict import EasyDict as edict
 
 def main():
 
@@ -118,8 +87,6 @@ def main():
         torch.backedns.cudnn.benchmark = True
     cfg.model.pretrained = None
     cfg.data.test.test_mode = True
-
-    # launcher = None, distributed = False by default.
     distributed = False
 
     # build the dataloader
@@ -157,8 +124,7 @@ def main():
         model = MMDataParallel(model, device_ids=[gpus[0]])
         # args.show = False
         outputs_mask, outputs_pano = \
-                single_gpu_test(model,
-                                data_loader)
+                single_gpu_test(model, data_loader)
         # save the outputs as .pkl files.
         with open(args.out.replace('.pkl','_mask.pkl'), 'wb') as f:
             pickle.dump(outputs_mask, f, protocol=2)
@@ -175,37 +141,43 @@ def main():
             # image_sets=args.out.split('.pkl')[0],
             flip=False,
             result_path=args.out.split('.pkl')[0], 
-            phase='test')
+            )
 
-    # *******************************************
     # EVAL: SEMANTIC SEGMENTATION
     # *******************************************
-    print("==> Semantic Segmentation results will be saved at:")
+    print("==> Semantic Segmentation PNGs will be saved at:")
     print("---", args.out.split('.pkl')[0]+'_ssegs/')
     eval_helper_dataset.evaluate_ssegs(
             outputs_pano['all_ssegs'], 
             args.out.replace('.pkl','_ssegs'), 
             outputs_pano['all_names'])
 
-    # *******************************************    
     # EVAL: IMAGE PANOPTIC SEGMENTATION
     # *******************************************
-    print("==> Image Panoptic Segmentation results will be saved at:")
+    print("==> Image Panoptic Segmentation PNGs and PQ.TXT will be saved at:")
     print("---", args.out.split('.pkl')[0]+'_pans_unified/')
-    pred_pans_2ch_ = eval_helper_dataset.get_unified_pan_result(
+    # If _pred_pans_2ch.pkl is saved already, load = True.
+    if args.load:
+        pans_2ch_pkl = args.out.replace('.pkl','_pred_pans_2ch.pkl')
+        pred_pans_2ch = pickle.load(open(pans_2ch_pkl, 'rb'))
+    else:
+        pred_pans_2ch_ = eval_helper_dataset.get_unified_pan_result(
             outputs_pano['all_ssegs'],
             outputs_pano['all_panos'], 
             outputs_pano['all_pano_cls_inds'], 
             stuff_area_limit=config.test.panoptic_stuff_area_limit, 
             names=outputs_pano['all_names'])
 
-    pred_keys = [_ for _ in pred_pans_2ch_.keys()]
-    pred_keys.sort()
-    pred_pans_2ch = [pred_pans_2ch_[k] for k in pred_keys]
-    del pred_pans_2ch_
+        pred_keys = [_ for _ in pred_pans_2ch_.keys()]
+        pred_keys.sort()
+        pred_pans_2ch = [pred_pans_2ch_[k] for k in pred_keys]
+        del pred_pans_2ch_
+        with open(args.out.replace('.pkl','_pred_pans_2ch.pkl'), 'wb') as f:
+            pickle.dump(pred_pans_2ch, f, protocol=2)
+    
+    # Evaluate IPQ
     eval_helper_dataset.evaluate_panoptic(
             pred_pans_2ch, args.out.replace('.pkl','_pans_unified'))
-
 
 
 if __name__ == '__main__':

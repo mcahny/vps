@@ -92,7 +92,7 @@ def parse_args():
     # parser.add_argument('--show', action='store_true', help='show results')
     # parser.add_argument('--tmpdir', help='tmp dir for writing some results')
     # parser.add_argument('--launcher', choices=['none', 'pytorch', 'slurm', 'mpi'], default='none', help='job launcher')
-    parser.add_argument('--local_rank', type=int, default=0)
+    # parser.add_argument('--local_rank', type=int, default=0)
     # parser.add_argument('--n_video', type=int, default=10)
     parser.add_argument('--dataset', type=str, default='CityscapesExt')
     # parser.add_argument('--name', type=str, default='val0429')
@@ -115,8 +115,8 @@ def parse_args():
     #### update config
     update_config(args.test_config)
     args = parser.parse_args()
-    if 'LOCAL_RANK' not in os.environ:
-        os.environ['LOCAL_RANK'] = str(args.local_rank)
+    # if 'LOCAL_RANK' not in os.environ:
+    #     os.environ['LOCAL_RANK'] = str(args.local_rank)
     return args
 
 # from easydict import EasyDict as edict
@@ -166,10 +166,7 @@ def main():
     # If _mask.pkl & _pano.pkl results are saved already, load = True.
     if args.load:
         outputs_mask = mmcv.load(args.out.replace('.pkl','_mask.pkl'))
-        pano_pkl = args.out.replace('.pkl','_pano.pkl')
-        outputs_pano = pickle.load(open(pano_pkl, 'rb'))
     else:
-        # TODO: to support multi-gpu inference
         model = MMDataParallel(model, device_ids=[gpus[0]])
         # args.show = False
         outputs_mask, outputs_pano = \
@@ -178,8 +175,8 @@ def main():
         # save the outputs as .pkl files.
         with open(args.out.replace('.pkl','_mask.pkl'), 'wb') as f:
             pickle.dump(outputs_mask, f, protocol=2)
-        with open(args.out.replace('.pkl','_pano.pkl'), 'wb') as f:
-            pickle.dump(outputs_pano, f, protocol=2)
+        # with open(args.out.replace('.pkl','_pano.pkl'), 'wb') as f:
+        #     pickle.dump(outputs_pano, f, protocol=2)
 
     # helper dataset from upsnet
     # config.dataset.dataset --> args.dataset
@@ -250,18 +247,17 @@ def main():
         print('==== Done: vps_unified_pan_result ====')
 
         ####
-        labeled_fid = 20
-        lambda_ = 5
+        # labeled_fid = 20
+        # lambda_ = 5
         pred_keys = [_ for _ in pred_pans_2ch_.keys()]
         pred_keys.sort()
-        pred_keys = pred_keys[(labeled_fid//lambda_)::lambda_]
+        # pred_keys = pred_keys[(labeled_fid//lambda_)::lambda_]
         # pred_keys = pred_keys[4::5]
-        pred_pans_2ch = {k:pred_pans_2ch_[k] for k in pred_keys}
+        pred_pans_2ch = [pred_pans_2ch_[k] for k in pred_keys]
         del pred_pans_2ch_
         with open(args.out.replace('.pkl','_pred_pans_2ch.pkl'), 'wb') as f:
             pickle.dump(pred_pans_2ch, f, protocol=2)
     
-    pred_pans_2ch = [v for k,v in pred_pans_2ch.items()] 
     # ******************************
     # ['0005_0025_frankfurt_000000_001736_newImg8bit.png', '0005_0026_frankfurt_000000_001741_newImg8bit.png', '0005_0027_frankfurt_000000_001746_newImg8bit.png', '0005_0028_frankfurt_000000_001751_leftImg8bit.png']
     

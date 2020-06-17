@@ -230,8 +230,8 @@ log_config = dict(
 total_epochs = 24
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/cityscapes/ups_pano_flow_tcea_vp'
-load_from = './work_dirs/viper/ups_pano_flow_tcea/latest.pth'
+work_dir = './work_dirs/cityscapes/fuse_vpct'
+load_from = './work_dirs/viper/fuse/latest.pth'
 # load_from = './work_dirs/panopticFPN_coco/latest.pth'
 # load_from = None
 resume_from = None

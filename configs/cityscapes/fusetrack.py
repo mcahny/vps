@@ -68,7 +68,6 @@ model = dict(
         fc_out_channels=1024,
         roi_feat_size=7,
         match_coeff=[1.0,2.0, 10],
-        # match_coeff=[1.0, 0.0, 10],
         loss_match=dict(
             type='CrossEntropyLoss', use_sigmoid=False, loss_weight=0.5),
         ),
@@ -163,15 +162,9 @@ train_pipeline = [
     dict(type='Normalize', **img_norm_cfg),
     dict(type='RandomCrop', crop_size=(800, 1600)),
     dict(type='Pad', size_divisor=32),
-    # dict(type='ImgResizeFlipNormCropPad'),
     dict(type='SegResizeFlipCropPadRescale', scale_factor=[1, 0.25]),
-    # dict(type='FlowResizeFlipCropPadRescale', scale_factor=1),
     dict(type='DefaultFormatBundle'),
-    # dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 
-    #         'gt_obj_ids', 'gt_masks', 'gt_semantic_seg', 
-    #         'gt_semantic_seg_Nx', 'ref_img', 'ref_bboxes', 
-    #         'ref_labels', 'ref_obj_ids', 'ref_masks', 
-    #         'ref_semantic_seg', 'ref_semantic_seg_Nx']),
+
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 
             'gt_obj_ids', 'gt_masks', 'gt_semantic_seg', 
             'gt_semantic_seg_Nx', 'ref_img', 'ref_bboxes', 
@@ -179,13 +172,7 @@ train_pipeline = [
 ]
 test_pipeline = [
     dict(type='LoadRefImageFromFile'),
-    # dict(type='Resize', img_scale=[(2048, 1024)], keep_ratio=True,
-    #     multiscale_mode='value'),
-    # dict(type='RandomFlip', flip_ratio=0),
-    # dict(type='Normalize', **img_norm_cfg),
-    # dict(type='Pad', size_divisor=32),
-    # dict(type='ImageToTensor', keys=['img']),
-    # dict(type='Collect', keys=['img']),
+
     dict(
         type='MultiScaleFlipAug',
         img_scale=[(2048, 1024)],
@@ -195,7 +182,6 @@ test_pipeline = [
             dict(type='RandomFlip'),
             dict(type='Normalize', **img_norm_cfg),
             dict(type='Pad', size_divisor=32),
-            # dict(type='ImgResizeFlipNormCropPad'),
             dict(type='ImageToTensor', keys=['img', 'ref_img']),
             dict(type='Collect', keys=['img', 'ref_img']),
         ])
@@ -211,43 +197,29 @@ data = dict(
             type=dataset_type,
             ann_file=data_root +
             'instances_train_city_vps_rle.json',
-            # 'instances_train_01_city_coco_rle.json',
             img_prefix=data_root + 'train/img/',
             ref_prefix=data_root + 'train/img/',
             seg_prefix=data_root + 'train/labelmap/',
-            # flow_prefix=data_root + 'flows/',
             pipeline=train_pipeline,
             ref_ann_file=data_root + 
             'instances_train_city_vps_rle.json',
-            # 'instances_train_01_city_coco_rle.json',
             offsets=[-1,+1])),
     val=dict(
         type=dataset_type,
         ann_file=data_root +
         'instances_val_city_vps_rle.json',
-        # 'instances_val_01_city_coco_rle.json',
         img_prefix=data_root + 'val/img/',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
         ann_file=data_root +
-        # 'instances_val_01_city_im_cvpr.json',
-        # img_prefix=data_root + 'demo_cvpr/img/',
-        # ref_prefix=data_root + 'demo_cvpr/img/',
-        # 'instances_val_01_city_im_munster.json',
-        # img_prefix=data_root + 'demo_munster/img/',
-        # ref_prefix=data_root + 'demo_munster/img/',
-        # 'instances_val_01_city_im_munster.json',
-        # img_prefix=data_root + 'demo_munster/img/',
-        # ref_prefix=data_root + 'demo_munster/img/',
-        'im_all_info_val_city_vps.json',
+        # 'im_all_info_val_city_vps.json',
         # img_prefix=data_root + 'val/img_all/',
         # ref_prefix=data_root + 'val/img_all/',
-        # 'instances_val_01_city_im_info.json',
-        img_prefix=data_root + 'val/img_all/',
-        ref_prefix=data_root + 'val/img_all/',
+        'im_all_info_test_city_vps.json',
+        img_prefix=data_root + 'test/img_all/',
+        ref_prefix=data_root + 'test/img_all/',
         nframes_span_test=30,
-        # flow_prefix=data_root + 'flows/',
         pipeline=test_pipeline))
 # optimizer
 # lr is set for a batch size of 8
@@ -266,21 +238,15 @@ log_config = dict(
     interval=100,
     hooks=[
         dict(type='TextLoggerHook'),
-        # dict(type='TensorboardLoggerHook')
     ])
 # yapf:enable
 # runtime settings
 total_epochs = 12
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/cityscapes_vps/ups_pano_vps_fusetrack_vpct'
-# load_from = './work_dirs/panopticFPN_coco/latest.pth'
-# load_from = './work_dirs/cityscapes/ups_cococity_512x2/latest.pth'
-# load_from = './work_dirs/cityscapes/ups_pano_coco/latest.pth'
-# load_from = './work_dirs/viper/ups_pano_track_flow_tcea/latest.pth'
-load_from = './work_dirs/cityscapes/ups_pano_flow_tcea_vp/latest.pth'
-# load_from = None
-# resume_from = './work_dirs/cityscapes/ups_async_cococity_512x2/latest.pth'
+
+work_dir = './work_dirs/cityscapes_vps/fusetrack_vpct'
+load_from = './work_dirs/cityscapes/fuse_vpct/latest.pth'
 resume_from = None
 workflow = [('train', 1)]
 

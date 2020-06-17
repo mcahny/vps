@@ -48,9 +48,12 @@ bash ./download_weights.sh
 ```
 
 ## Dataset
-Cityscapes-VPS dataset not only supports video panoptic segmentation (VPS) task, but also provides super-set annotations for video semantic segmentation (VSS) and video instance segmentation (VIS) tasks. 
+Cityscapes-VPS provides 2500-frame panoptic labels that temporally extend the 500 Cityscapes image-panoptic labels. Total 3000-frame panoptic labels correspond to 5, 10, 15, 20, 25, and 30th frames of each 500 videos, where all instance ids are associated over time.
+<img src="./image/dataset.png" width="800"> 
 
-Necessary data for VPS training, testing, and evaluation are as follows.
+It not only supports video panoptic segmentation (VPS) task, but also provides super-set annotations for video semantic segmentation (VSS) and video instance segmentation (VIS) tasks. 
+
+Necessary data for Cityscapes-VPS training, testing, and evaluation are as follows.
 Please refer to [DATASET.md](docs/DATASET.md) for dataset preparation. 
 ```
 mmdetection
@@ -81,33 +84,37 @@ mmdetection
 ## Testing
 Our trained models are available for download at Google Drive. Run the following command to test the model on Cityscapes and Cityscapes-VPS.
 
-a. Image Panoptic Quality on Cityscapes.
+a. Image Panoptic Quality on Cityscapes (`pq.txt` will be saved.)
 ```
 python tools/test_eval_ipq.py \
-    configs/cityscapes/ups_pano_flow_tcea.py \
-    work_dirs/cityscapes/ups_pano_flow_tcea_vp/latest.pth \
-    --out work_dirs/cityscapes/ups_pano_flow_tcea_vp/val.pkl \
-    --dataset Cityscapes --name val --gpus 0
+  configs/cityscapes/fuse.py \
+  work_dirs/cityscapes/fuse_vpct/latest.pth \
+  --out work_dirs/cityscapes/fuse_vpct/val.pkl \
+  --dataset Cityscapes
 ```
-b. Video Panoptic Quality (VPQ) on Cityscapes-VPS.
+b. Video Panoptic Quality (VPQ) on Cityscapes-VPS `val` set
 ```
-python tools/test_vpq.py \
-  configs/cityscapes/ups_pano_ext_track_flow_tcea.py \
-  work_dirs/cityscapes_ext/ups_pano_vps_fusetrack_vpct/latest.pth \
-  --out work_dirs/cityscapes_ext/ups_pano_vps_fusetrack_vpct/val0615.pkl \
-  --name val0615 --dataset CityscapesExt --has_track --n_video 50 \
-  --pan_im_json_file data/cityscapes_ext/panoptic_im_val_city_vps.json --load
-
-python tools/test_vpq.py configs/cityscapes/ups_pano_ext_track_flow_tcea.py work_dirs/cityscapes_ext/ups_pano_vps_fusetrack_vpct/latest.pth --out work_dirs/cityscapes_ext/ups_pano_vps_fusetrack_vpct/test0616.pkl --name test0616 --dataset CityscapesExt --has_track --n_video 50 --pan_im_json_file data/cityscapes_ext/panoptic_im_test_city_vps.json
-
+python tools/test_vpq.py configs/cityscapes/fusetrack.py \
+  work_dirs/cityscapes_vps/fusetrack_vpct/latest.pth \
+  --out work_dirs/cityscapes_vps/fusetrack_vpct/val.pkl \
+  --dataset CityscapesVps --has_track --n_video 50 \
+  --pan_im_json_file data/cityscapes_vps/panoptic_im_val_city_vps.json
 python tools/eval_vpq.py \
-  --submit_dir work_dirs/cityscapes_ext/ups_pano_vps_fusetrack_vpct/val0615_pans_unified/ \
-  --truth_dir data/cityscapes_ext/validation/panoptic_video/ \
-  --pan_gt_json_file data/cityscapes_ext/validation/panoptic_ann_val_city_vps.json
+  --submit_dir work_dirs/cityscapes_vps/fusetrack_vpct/val_pans_unified/ \
+  --truth_dir data/cityscapes_vps/val/panoptic_video/ \
+  --pan_gt_json_file data/cityscapes_vps/panoptic_gt_val_city_vps.json
 ```
-Files containing the predicted results will be generated as `pred.json` and `pan/*.png` at  `work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/val_pans_unified/`. 
+c. VPS inference on Cityscapes-VPS `test` set
+```
+python tools/test_vpq.py configs/cityscapes/fusetrack.py \
+  work_dirs/cityscapes_vps/fusetrack_vpct/latest.pth \
+  --out work_dirs/cityscapes_vps/fusetrack_vpct/test.pkl \
+  --dataset CityscapesVps --has_track --n_video 50 \
+  --pan_im_json_file data/cityscapes_vps/panoptic_im_test_city_vps.json
+```
+Files containing the predicted results will be generated as `pred.json` and `pan_pred/*.png` at  `work_dirs/cityscapes_vps/fusetrack_vpct/test_pans_unified/`. 
 
-c. Cityscapes-VPS `test` split currently only allows evaluation on the codalab server. Please upload `submission.zip` to codalab server to see actual performances.
+Cityscapes-VPS `test` split currently only allows evaluation on the codalab server. Please upload `submission.zip` to codalab server to see actual performances.
 ```
 submission.zip
 ├── pred.json

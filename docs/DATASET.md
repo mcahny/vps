@@ -5,24 +5,19 @@ This software is for non-commercial use only. The source code is released under 
 
 ### Download datasets
 a. Symlink the `$DATA_ROOT` dataset to `$MMDETECTION/data` folder. 
-
 b. Download `leftImg8bit_sequence.zip` and `gtFine.zip` from the [Cityscapes-dataset webpage](https://cityscpaes-dataset.com/) in the `data` folder. You need only `val/` of these datasets to construct Cityscapes-VPS.
-
 c. Download Cityscapes-VPS from here in `$CITY_VPS` folder.
 
-### Merge Cityscapes and Cityscapes-VPS
-a. Fetch cityscapes sequence images into `$CITY_VPS/SPLIT/img_all` by running this command.
+### Merge Cityscapes and Cityscapes-VPS datasets
+Fetch cityscapes sequence images into `$CITY_VPS/SPLIT/img_all` and merge two datasets at `$CITY_VPS/SPLIT/cls` and `$CITY_VPS/SPLIT/inst`.
 ```
 # SPLIT = 'val' or 'test'
 python prepare_city_vps/fetch_city_images.py --src_dir data/leftImg8bit_sequence/val/ --dst_dir $CITY_VPS --mode SPLIT 
-```
-
-b. Merge two datasets at `$CITY_VPS/SPLIT/cls` and `$CITY_VPS/SPLIT/inst`.
-```
 python prepare_city_vps/merge_datasets.py --src_dir data/gtFine/val/ --dst_dir $CITY_VPS --mode SPLIT
+```
 
 ### Create panoptic labels
-a. Create `labelmap/`, `panoptic_inst/`, and `panoptic_video/` in `$CITY_VPS/SPLIT/` by running following commands.
+Create `labelmap/`, `panoptic_inst/`, and `panoptic_video/` in `$CITY_VPS/SPLIT/` by running following commands.
 ```
 python prepare_city_vps/create_panoptic_labels.py --root_dir $CITY_VPS --mode SPLIT
 python prepare_city_vps/create_panoptic_video_labels.py --root_dir $CITY_VPS --mode SPLIT
@@ -35,6 +30,8 @@ mmdetection
 ├── tools
 ├── configs
 ├── data
+│   ├── leftImg8bit_sequence
+│   ├── gtFine
 │   ├── cityscapes_vps
 │   │   ├── panoptic_im_train_city_vps.json
 │   │   ├── panoptic_im_val_city_vps.json

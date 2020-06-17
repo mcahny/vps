@@ -84,7 +84,7 @@ mmdetection
 ## Testing
 Our trained models are available for download at Google Drive. Run the following command to test the model on Cityscapes and Cityscapes-VPS.
 
-a. Image Panoptic Quality on Cityscapes `val` set (`pq.txt` will be saved.)
+* Image Panoptic Quality on Cityscapes `val` set (`pq.txt` will be saved.)
 ```
 python tools/test_eval_ipq.py \
   configs/cityscapes/fuse.py \
@@ -92,7 +92,7 @@ python tools/test_eval_ipq.py \
   --out work_dirs/cityscapes/fuse_vpct/val.pkl \
   --dataset Cityscapes
 ```
-b. Video Panoptic Quality (VPQ) on Cityscapes-VPS `val` set (`vpq-λ.txt` will be saved.)
+* Video Panoptic Quality (VPQ) on Cityscapes-VPS `val` set (`vpq-λ.txt` will be saved.)
 ```
 python tools/test_vpq.py configs/cityscapes/fusetrack.py \
   work_dirs/cityscapes_vps/fusetrack_vpct/latest.pth \
@@ -104,7 +104,7 @@ python tools/eval_vpq.py \
   --truth_dir data/cityscapes_vps/val/panoptic_video/ \
   --pan_gt_json_file data/cityscapes_vps/panoptic_gt_val_city_vps.json
 ```
-c. VPS inference on Cityscapes-VPS `test` set
+* VPS inference on Cityscapes-VPS `test` set
 ```
 python tools/test_vpq.py configs/cityscapes/fusetrack.py \
   work_dirs/cityscapes_vps/fusetrack_vpct/latest.pth \
@@ -127,13 +127,13 @@ submission.zip
 
 
 ## Training
-a. Train Fuse model on image-level Cityscapes.
+* Train Fuse model on image-level Cityscapes.
 ```
-bash ./tools/dist_train.sh configs/cityscapes/ups_pano_flow_tcea.py ${GPU_NUM}
+bash ./tools/dist_train.sh configs/cityscapes/fuse.py ${GPU_NUM}
 ```
-b. Train FuseTrack model on video-level Cityscapes-VPS.
+* Train FuseTrack model on video-level Cityscapes-VPS.
 ```
-bash ./tools/dist_train.sh configs/cityscapes/ups_pano_ext_track_flow_tcea.py ${GPU_NUM}
+bash ./tools/dist_train.sh configs/cityscapes/fusetrack.py ${GPU_NUM}
 ```
 
 

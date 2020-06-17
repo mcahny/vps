@@ -84,7 +84,7 @@ mmdetection
 ## Testing
 Our trained models are available for download at Google Drive. Run the following command to test the model on Cityscapes and Cityscapes-VPS.
 
-a. Image Panoptic Quality on Cityscapes (`pq.txt` will be saved.)
+a. Image Panoptic Quality on Cityscapes `val` set (`pq.txt` will be saved.)
 ```
 python tools/test_eval_ipq.py \
   configs/cityscapes/fuse.py \
@@ -92,7 +92,7 @@ python tools/test_eval_ipq.py \
   --out work_dirs/cityscapes/fuse_vpct/val.pkl \
   --dataset Cityscapes
 ```
-b. Video Panoptic Quality (VPQ) on Cityscapes-VPS `val` set
+b. Video Panoptic Quality (VPQ) on Cityscapes-VPS `val` set (`vpq-λ.txt` will be saved.)
 ```
 python tools/test_vpq.py configs/cityscapes/fusetrack.py \
   work_dirs/cityscapes_vps/fusetrack_vpct/latest.pth \

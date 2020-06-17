@@ -12,8 +12,10 @@ c. Download Cityscapes-VPS from here in `$CITY_VPS` folder.
 Fetch cityscapes sequence images into `$CITY_VPS/SPLIT/img_all` and merge two datasets at `$CITY_VPS/SPLIT/cls` and `$CITY_VPS/SPLIT/inst`.
 ```
 # SPLIT = 'val' or 'test'
-python prepare_city_vps/fetch_city_images.py --src_dir data/leftImg8bit_sequence/val/ --dst_dir $CITY_VPS --mode SPLIT 
-python prepare_city_vps/merge_datasets.py --src_dir data/gtFine/val/ --dst_dir $CITY_VPS --mode SPLIT
+python prepare_city_vps/fetch_city_images.py --src_dir data/leftImg8bit_sequence/val/ \
+    --dst_dir $CITY_VPS --mode SPLIT 
+python prepare_city_vps/merge_datasets.py --src_dir data/gtFine/val/ \
+    --dst_dir $CITY_VPS --mode SPLIT
 ```
 
 ### Create panoptic labels
@@ -31,8 +33,6 @@ mmdetection
 ├── tools
 ├── configs
 ├── data
-│   ├── leftImg8bit_sequence
-│   ├── gtFine
 │   ├── cityscapes_vps
 │   │   ├── panoptic_im_train_city_vps.json
 │   │   ├── panoptic_im_val_city_vps.json

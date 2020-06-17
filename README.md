@@ -21,7 +21,7 @@ Official pytorch implementation for "Video Panoptic Segmentation" (CVPR 2020 Ora
 Image-level baseline (left) / **VPSNet** result (right)
 
 ## Disclaimer
-This repo is tested under Python 3.7, PyTorch 1.4 and mmcv==0.2.14.
+This repo is tested under Python 3.7, PyTorch 1.4, Cuda 10.0, and mmcv==0.2.14.
 
 ## Installation
 a. This repo is built based on [mmdetection](https://github.com/open-mmlab/mmdetection) commit hash `4357697`. Please refer to [INSTALL.md](docs/INSTALL.md) to install the library.
@@ -48,10 +48,10 @@ bash ./download_weights.sh
 ```
 
 ## Dataset
-Cityscapes-VPS dataset is also a super-set of video semantic segmentation and video instance segmentation.
-Please refer to [DATASET.md](docs/DATASET.md) for dataset preparation.
+Cityscapes-VPS dataset not only supports video panoptic segmentation (VPS) task, but also provides super-set annotations for video semantic segmentation (VSS) and video instance segmentation (VIS) tasks. 
 
-Necessary data for VPS training, testing, and evaluation are as follows. 
+Necessary data for VPS training, testing, and evaluation are as follows.
+Please refer to [DATASET.md](docs/DATASET.md) for dataset preparation. 
 ```
 mmdetection
 ├── mmdet

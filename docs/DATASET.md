@@ -5,7 +5,9 @@ This software is for non-commercial use only. The source code is released under 
 
 ### Download datasets
 a. Symlink the `$DATA_ROOT` dataset to `$MMDETECTION/data` folder. 
+
 b. Download `leftImg8bit_sequence.zip` and `gtFine.zip` from the [Cityscapes-dataset webpage](https://cityscpaes-dataset.com/) in the `data` folder. You need only `val/` of these datasets to construct Cityscapes-VPS.
+
 c. Download Cityscapes-VPS from here in `$CITY_VPS` folder.
 
 ### Merge Cityscapes and Cityscapes-VPS datasets

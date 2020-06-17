@@ -21,6 +21,7 @@ Create `labelmap/`, `panoptic_inst/`, and `panoptic_video/` in `$CITY_VPS/SPLIT/
 ```
 python prepare_city_vps/create_panoptic_labels.py --root_dir $CITY_VPS --mode SPLIT
 python prepare_city_vps/create_panoptic_video_labels.py --root_dir $CITY_VPS --mode SPLIT
+```
 
 ### Directory Structure
 Necessary data for training, testing, and evaluation are as follows.

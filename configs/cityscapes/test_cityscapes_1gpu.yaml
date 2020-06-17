@@ -11,7 +11,8 @@ dataset:
   dataset_path: "./data/cityscapes/"
   image_set: train
   root_path: "./data/"
-  test_image_set: val
+  test_image_set: test
+  # test_image_set: vala
 
 network:
   has_rpn: true

@@ -21,7 +21,8 @@ class CityscapesVideoOfsDataset(CocoDataset):
                  proposal_file=None,
                  test_mode=False,
                  ref_ann_file=None,
-                 offsets=None):
+                 offsets=None,
+                 nframes_span_test=6):
         super(CityscapesVideoOfsDataset, self).__init__(        
                  ann_file=ann_file,
                  pipeline=pipeline,
@@ -39,6 +40,7 @@ class CityscapesVideoOfsDataset(CocoDataset):
                     self.ref_ann_file)
             self.iid2ref_img_infos = {x['id']:x for x in self.img_infos}
         self.offsets = offsets
+        self.nframes_span_test = nframes_span_test
 
     CLASSES = ('person', 'rider', 'car', 'truck', 'bus', 
                'train', 'motorcycle', 'bicycle')
@@ -190,7 +192,7 @@ class CityscapesVideoOfsDataset(CocoDataset):
     def prepare_test_img(self, idx):
         img_info = self.img_infos[idx]
 
-        prev_img_info = self.img_infos[idx-1] if idx%6 > 0 else img_info
+        prev_img_info = self.img_infos[idx-1] if idx%(self.nframes_span_test) > 0 else img_info
         img_info['ref_id'] = prev_img_info['id']-1
         img_info['ref_filename'] = prev_img_info['file_name']
 

@@ -49,7 +49,7 @@ bash ./download_weights.sh
 
 ## Dataset
 Cityscapes-VPS dataset is also a super-set of video semantic segmentation and video instance segmentation.
-Please refer to [dataset.md](docs/DATASET.md) for dataset preparation.
+Please refer to [DATASET.md](docs/DATASET.md) for dataset preparation.
 
 
 ## Testing
@@ -66,15 +66,18 @@ python tools/test_eval_ipq.py \
 b. Video Panoptic Quality (VPQ) on Cityscapes-VPS.
 ```
 python tools/test_vpq.py \
-    configs/cityscapes/ups_pano_ext_track_flow_tcea.py \
-    work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/latest.pth \
-    --out work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/val_unified_.pkl \
-    --name val --dataset CityscapesExt --txt_dir val --has_track --n_video 100
+  configs/cityscapes/ups_pano_ext_track_flow_tcea.py \
+  work_dirs/cityscapes_ext/ups_pano_vps_fusetrack_vpct/latest.pth \
+  --out work_dirs/cityscapes_ext/ups_pano_vps_fusetrack_vpct/val0615.pkl \
+  --name val0615 --dataset CityscapesExt --has_track --n_video 50 \
+  --pan_im_json_file data/cityscapes_ext/panoptic_im_val_city_vps.json --load
+
+python tools/test_vpq.py configs/cityscapes/ups_pano_ext_track_flow_tcea.py work_dirs/cityscapes_ext/ups_pano_vps_fusetrack_vpct/latest.pth --out work_dirs/cityscapes_ext/ups_pano_vps_fusetrack_vpct/test0616.pkl --name test0616 --dataset CityscapesExt --has_track --n_video 50 --pan_im_json_file data/cityscapes_ext/panoptic_im_test_city_vps.json
+
 python tools/eval_vpq.py \
-    configs/cityscapes/ups_pano_ext_track_flow_tcea.py \
-    work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/latest.pth \
-    --out work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/val_unified_.pkl \
-    --name val --dataset CityscapesExt --txt_dir val --has_track --n_video 100
+  --submit_dir work_dirs/cityscapes_ext/ups_pano_vps_fusetrack_vpct/val0615_pans_unified/ \
+  --truth_dir data/cityscapes_ext/validation/panoptic_video/ \
+  --pan_gt_json_file data/cityscapes_ext/validation/panoptic_ann_val_city_vps.json
 ```
 Files containing the predicted results will be generated as `pred.json` and `pan/*.png` at  `work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/val_pans_unified/`. 
 

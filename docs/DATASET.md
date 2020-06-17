@@ -3,10 +3,65 @@
 ### Disclaimer
 This software is for non-commercial use only. The source code is released under the Attribution-NonCommercial-ShareAlike (CC BY-NC-SA) Licence. Permission is granted to use the data given that you agree to both [our license terms](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode) and that of the original [Cityscapes-dataset](https://cityscpaes-dataset.com/license/)
 
-### Prepare datasets
+### Download datasets
+a. Symlink the `$DATA_ROOT` dataset to `$MMDETECTION/data` folder. 
 
-a. Download Cityscapes-VPS from here.
-b. Symlink the `$DATA_ROOT` dataset to `$MMDETECTION/data` folder. 
+b. Download `leftImg8bit_sequence.zip` and `gtFine.zip` from the [Cityscapes-dataset webpage](https://cityscpaes-dataset.com/) in the `data` folder. You need only `val/` of these datasets to construct Cityscapes-VPS.
+
+c. Download Cityscapes-VPS from here in `$CITY_VPS` folder.
+
+### Merge Cityscapes and Cityscapes-VPS
+a. Fetch cityscapes sequence images into `$CITY_VPS/SPLIT/img_all` by running this command.
+```
+# SPLIT = 'val' or 'test'
+python prepare_city_vps/fetch_city_images.py --src_dir data/leftImg8bit_sequence/val/ --dst_dir $CITY_VPS --mode SPLIT 
+```
+
+b. Merge two datasets at `$CITY_VPS/SPLIT/cls` and `$CITY_VPS/SPLIT/inst`.
+```
+python prepare_city_vps/merge_datasets.py --src_dir data/gtFine/val/ --dst_dir $CITY_VPS --mode SPLIT
+
+### Create panoptic labels
+a. Create `labelmap/`, `panoptic_inst/`, and `panoptic_video/` in `$CITY_VPS/SPLIT/` by running following commands.
+```
+cd prepare_city_vps
+pip install .
+cd ..
+python prepare_city_vps/create_panoptic_labels.py --root_dir $CITY_VPS --mode SPLIT
+python prepare_city_vps/create_panoptic_video_labels.py --root_dir $CITY_VPS --mode SPLIT
+
+### Directory Structure
+Necessary data for training, testing, and evaluation are as follows.
+```
+mmdetection
+├── mmdet
+├── tools
+├── configs
+├── data
+│   ├── cityscapes_vps
+│   │   ├── panoptic_im_train_city_vps.json
+│   │   ├── panoptic_im_val_city_vps.json
+│   │   ├── panoptic_im_test_city_vps.json  
+│   │   ├── instances_train_city_vps_rle.json (for training)
+│   │   ├── instances_val_city_vps_rle.json 
+│   │   ├── im_all_info_val_city_vps.json (for inference)
+│   │   ├── im_all_info_test_city_vps.json (for inference)
+│   │   ├── panoptic_gt_val_city_vps.json (for VPQ eval)
+│   │   ├── train 
+│   │   │   ├── img
+│   │   │   ├── labelmap
+│   │   ├── val
+│   │   │   ├── img
+│   │   │   ├── img_all
+│   │   │   ├── panoptic_video
+│   │   ├── test
+│   │   │   ├── img
+│   │   │   ├── img_all
+```
+
+-----------------------------
+
+
 ```
 mmdetection
 ├── mmdet
@@ -24,7 +79,7 @@ mmdetection
 │   │   ├── labels
 │   │   ├── val
 │   │   ├── val_nbr
-│   ├── cityscapes_ext
+│   ├── cityscapes_vps
 │   │   ├── instances_train_01_city_coco_rle.json
 │   │   ├── instances_val_01_city_coco_rle.json
 │   │   ├── instances_val_01_im_info.json
@@ -37,7 +92,8 @@ mmdetection
 │   │   │   ├── panoptic_video_vivid
 ```
 
------------------------------
+
+
 
 Note:
 

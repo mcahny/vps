@@ -88,18 +88,40 @@ class CityscapesExt(BaseDataset):
         # self.roidb = roidb
 
     def inference_panoptic_video(self, pred_pans_2ch, output_dir, 
-                                 val_pred_json_file,
+                                 # pan_im_json_file,
+                                 categories,
+                                 names,
                                  n_video=0):
         from panopticapi.utils import IdGenerator
-        pred_pans_2ch = pred_pans_2ch[(self.labeled_fid//self.lambda_)::self.lambda_]
-        with open(val_pred_json_file,'r') as f:
-            val_jsons = json.load(f)
+        # pred_pans_2ch = pred_pans_2ch[(self.labeled_fid//self.lambda_)::self.lambda_]
+        # with open(pan_im_json_file,'r') as f:
+        #     im_jsons = json.load(f)
 
-        categories = val_jsons['categories']
+        # categories = im_jsons['categories']
         categories = {el['id']: el for el in categories}
         color_generator = IdGenerator(categories)
 
-        def get_pred_large(pan_2ch_all, vid_num=100, nframes_per_video=6):
+        # def get_pred_large(pan_2ch_all, vid_num, nframes_per_video=6):
+            
+        #     cpu_num = multiprocessing.cpu_count()
+        #     pan_2ch_split = np.array_split(pan_2ch_all, cpu_num)
+        #     workers = multiprocessing.Pool(processes=cpu_num)
+        #     processes = []
+        #     for proc_id, pan_2ch_set in enumerate(pan_2ch_split):
+        #         p = workers.apply_async(self.converter_2ch_track_core, (proc_id, pan_2ch_set, color_generator))
+        #         processes.append(p)
+        #     workers.close()
+        #     workers.join()
+        #     annotations, pan_all = [], []
+        #     for p in processes:
+        #         p = p.get()
+        #         annotations.extend(p[0])
+        #         pan_all.extend(p[1])
+        #     pan_json = {'annotations': annotations}
+        #     return pan_all, pan_json
+
+
+        def get_pred_large(pan_2ch_all, vid_num, nframes_per_video=6):
             vid_num = len(pan_2ch_all)//nframes_per_video # 10
             cpu_num = multiprocessing.cpu_count()//2 # 32 --> 16
             nprocs = min(vid_num, cpu_num) # 10
@@ -129,9 +151,10 @@ class CityscapesExt(BaseDataset):
             pan_json = {'annotations': annotations}
             return pan_all, pan_json
 
-        def save_image(images, save_folder, val_jsons, colors=None):
+        def save_image(images, save_folder, names, colors=None):
             os.makedirs(save_folder, exist_ok=True)
-            names = [osp.join(save_folder, item['file_name'].replace('_leftImg8bit', '').replace('_newImg8bit','').replace('jpg', 'png').replace('jpeg', 'png')) for item in val_jsons['images']]
+            # names = [osp.join(save_folder, item['file_name'].replace('_leftImg8bit', '').replace('_newImg8bit','').replace('jpg', 'png').replace('jpeg', 'png')) for item in im_jsons['images']]
+            names = [osp.join(save_folder, name.replace('_leftImg8bit', '').replace('_newImg8bit','').replace('jpg', 'png').replace('jpeg', 'png')) for name in names]
             cpu_num = multiprocessing.cpu_count()//2
             images_split = np.array_split(images, cpu_num)
             names_split = np.array_split(names, cpu_num)
@@ -147,8 +170,8 @@ class CityscapesExt(BaseDataset):
         print('--------------------------------------')    
         print('==> Saving VPS output png files')
         os.makedirs(output_dir, exist_ok=True)
-        save_image(pred_pans_2ch, osp.join(output_dir, 'pan_2ch'), val_jsons)
-        save_image(pred_pans, osp.join(output_dir, 'pan_pred'), val_jsons)
+        save_image(pred_pans_2ch, osp.join(output_dir, 'pan_2ch'), names)
+        save_image(pred_pans, osp.join(output_dir, 'pan_pred'), names)
         print('==> Saving pred.jsons file')
         json.dump(pred_json, open(osp.join(output_dir, 'pred.json'), 'w'))
         print('--------------------------------------') 
@@ -464,7 +487,7 @@ class CityscapesExt(BaseDataset):
 
 
     def converter_2ch_track_core(self, proc_id, pan_2ch_set, color_generator):
-        sys.path.insert(0, osp.join(osp.abspath(osp.dirname(__file__)), '..', '..', 'lib', 'dataset_devkit'))
+        # sys.path.insert(0, osp.join(osp.abspath(osp.dirname(__file__)), '..', '..', 'lib', 'dataset_devkit'))
         from panopticapi.utils import rgb2id
 
         OFFSET = 1000
@@ -478,7 +501,8 @@ class CityscapesExt(BaseDataset):
             pan = OFFSET * pan_2ch[:, :, 0] + pan_2ch[:, :, 2]
             pan_format = np.zeros((pan_2ch.shape[0], pan_2ch.shape[1], 3), dtype=np.uint8)
             l = np.unique(pan)
-            segm_info = []
+            # segm_info = []
+            segm_info = {}
             for el in l:
                 sem = el // OFFSET
                 if sem == VOID:
@@ -498,16 +522,35 @@ class CityscapesExt(BaseDataset):
                 else:
                     # stuff class
                     color = color_generator.get_color(sem)
+
                 pan_format[mask] = color
                 index = np.where(mask)
                 x = index[1].min()
                 y = index[0].min()
                 width = index[1].max() - x
                 height = index[0].max() - y
-                segm_info.append({"category_id": sem.item(), "iscrowd": 0, "id": int(rgb2id(color)), "bbox": [x.item(), y.item(), width.item(), height.item()], "area": mask.sum().item()})
+                # segm_info.append({"category_id": sem.item(), "iscrowd": 0, "id": int(rgb2id(color)), "bbox": [x.item(), y.item(), width.item(), height.item()], "area": mask.sum().item()})
+                dt = {"category_id": sem.item(), "iscrowd": 0, "id": int(rgb2id(color)), "bbox": [x.item(), y.item(), width.item(), height.item()], "area": mask.sum().item()}
+                segment_id = int(rgb2id(color))
+                segm_info[segment_id] = dt
             
-            annotations.append({"segments_info": segm_info})
+            # annotations.append({"segments_info": segm_info})
             pan_all.append(pan_format)
+            
+            gt_pan = np.uint32(pan_format)
+            pan_gt = gt_pan[:, :, 0] + gt_pan[:, :, 1] * 256 + gt_pan[:, :, 2] * 256 * 256      
+            labels, labels_cnt = np.unique(pan_gt, return_counts=True)
+            for label, area in zip(labels, labels_cnt):
+                if label == 0:
+                    continue
+                if label not in segm_info.keys():
+                    print('label:', label)
+                    raise KeyError('label not in segm_info keys.')
+
+                segm_info[label]["area"] = int(area)
+            segm_info = [v for k,v in segm_info.items()]
+
+            annotations.append({"segments_info": segm_info})
 
         return annotations, pan_all
 

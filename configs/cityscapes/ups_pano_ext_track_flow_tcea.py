@@ -147,7 +147,7 @@ test_cfg = dict(
     class_mapping = {1:11, 2:12, 3:13, 4:14, 5:15, 6:16, 7:17, 8:18})
 # dataset settings
 dataset_type = 'CityscapesVideoOfsDataset'
-data_root = 'data/cityscapes_ext/'
+data_root = 'data/cityscapes_vps/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
@@ -210,19 +210,22 @@ data = dict(
         dataset=dict(
             type=dataset_type,
             ann_file=data_root +
-            'instances_train_01_city_coco_rle.json',
+            'instances_train_city_vps_rle.json',
+            # 'instances_train_01_city_coco_rle.json',
             img_prefix=data_root + 'train/img/',
             ref_prefix=data_root + 'train/img/',
             seg_prefix=data_root + 'train/labelmap/',
             # flow_prefix=data_root + 'flows/',
             pipeline=train_pipeline,
             ref_ann_file=data_root + 
-            'instances_train_01_city_coco_rle.json',
+            'instances_train_city_vps_rle.json',
+            # 'instances_train_01_city_coco_rle.json',
             offsets=[-1,+1])),
     val=dict(
         type=dataset_type,
         ann_file=data_root +
-        'instances_val_01_city_coco_rle.json',
+        'instances_val_city_vps_rle.json',
+        # 'instances_val_01_city_coco_rle.json',
         img_prefix=data_root + 'val/img/',
         pipeline=test_pipeline),
     test=dict(
@@ -237,9 +240,13 @@ data = dict(
         # 'instances_val_01_city_im_munster.json',
         # img_prefix=data_root + 'demo_munster/img/',
         # ref_prefix=data_root + 'demo_munster/img/',
-        'instances_val_01_city_im_info.json',
+        'im_all_info_val_city_vps.json',
+        # img_prefix=data_root + 'val/img_all/',
+        # ref_prefix=data_root + 'val/img_all/',
+        # 'instances_val_01_city_im_info.json',
         img_prefix=data_root + 'val/img_all/',
         ref_prefix=data_root + 'val/img_all/',
+        nframes_span_test=30,
         # flow_prefix=data_root + 'flows/',
         pipeline=test_pipeline))
 # optimizer
@@ -266,7 +273,7 @@ log_config = dict(
 total_epochs = 12
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct'
+work_dir = './work_dirs/cityscapes_vps/ups_pano_vps_fusetrack_vpct'
 # load_from = './work_dirs/panopticFPN_coco/latest.pth'
 # load_from = './work_dirs/cityscapes/ups_cococity_512x2/latest.pth'
 # load_from = './work_dirs/cityscapes/ups_pano_coco/latest.pth'

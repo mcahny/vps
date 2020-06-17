@@ -74,7 +74,7 @@ def vpq_compute_single_core(gt_pred_set, categories, nframes=2):
     # start_time = time.time()
     # for idx in range(0, len(gt_pans_set)-nframes+1): 
     for idx in range(0, len(gt_pred_set)-nframes+1): 
-
+        # print('idx:', idx)
         vid_pan_gt, vid_pan_pred = [], []
         gt_segms_list, pred_segms_list = [], []
         # vid_pan_set = \
@@ -115,14 +115,16 @@ def vpq_compute_single_core(gt_pred_set, categories, nframes=2):
                 if label not in pred_segms:
                     if label == VOID:
                         continue
-                    raise KeyError('In the image with ID {} segment with ID {} is presented in PNG and not presented in JSON.'.format(gt_ann['image_id'], label))
+                    print('=== idx:', idx)
+                    pdb.set_trace()
+                    raise KeyError('Segment with ID {} is presented in PNG and not presented in JSON.'.format(label))
                 pred_segms[label]['area'] = label_cnt
                 pred_labels_set.remove(label)
                 if pred_segms[label]['category_id'] not in categories:
-                    raise KeyError('In the image with ID {} segment with ID {} has unknown category_id {}.'.format(gt_ann['image_id'], label, pred_segms[label]['category_id']))
+                    raise KeyError('Segment with ID {} has unknown category_id {}.'.format(label, pred_segms[label]['category_id']))
             if len(pred_labels_set) != 0:
                 raise KeyError(
-                    'In the image with ID {} the following segment IDs {} are presented in JSON and not presented in PNG.'.format(gt_ann['image_id'], list(pred_labels_set)))
+                    'The following segment IDs {} are presented in JSON and not presented in PNG.'.format(list(pred_labels_set)))
             #### Collect frame-lavel pan_map, jsons, etc.
             vid_pan_gt.append(pan_gt)
             vid_pan_pred.append(pan_pred)
@@ -164,8 +166,12 @@ def vpq_compute_single_core(gt_pred_set, categories, nframes=2):
         fp = 0
         fn = 0
 
+        # Area calculation
+        # vid_gt_labels, vid_gt_labels_cnt = np.unique(vid_pan_gt, return_counts=True)
+
         for label_tuple, intersection in gt_pred_map.items():
             gt_label, pred_label = label_tuple
+            # debug
             # pred_area = (vid_pan_pred == pred_label).sum()
             # gt_area = (vid_pan_gt == gt_label).sum()
 
@@ -192,8 +198,15 @@ def vpq_compute_single_core(gt_pred_set, categories, nframes=2):
                 (VOID, pred_label), 0)
             iou = intersection / union
 
-
             # ignore invalid iou value
+            # if iou > 1.0:
+            #     pred_area = (vid_pan_pred == pred_label).sum()
+            #     gt_area = (vid_pan_gt == gt_label).sum()
+            #     if vid_pred_segms[pred_label]['area'] != pred_area:
+            #         print('pred_area mismatch, iou:', iou)
+            #     if vid_gt_segms[gt_label]['area'] != gt_area:
+            #         print('gt_area mismatch, iou:', iou)
+            #     pdb.set_trace()
             assert iou <= 1.0, 'INVALID IOU VALUE : %d'%(gt_label)
 
             if iou > 0.5:
@@ -277,9 +290,11 @@ def parse_args():
     parser.add_argument('--submit_dir', type=str,
         help='test outout directory', default='work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/val0430_pans_unified/') 
     parser.add_argument('--truth_dir', type=str, 
-        help='ground truth directory', default='data/cityscapes_ext/val/')
-    parser.add_argument('--output_dir', type=str,
-        default='work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/val_pans_unified/')
+        help='ground truth directory', default='data/cityscapes_ext/validation/panoptic_video')
+    parser.add_argument('--pan_gt_json_file', type=str, 
+        help='ground truth directory', default='data/cityscapes_ext/validation/cityscapes_ext_panoptic_validation_video.json')
+    # parser.add_argument('--output_dir', type=str,
+    #     default='work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/val_pans_unified/')
     
     args = parser.parse_args()
     return args
@@ -290,7 +305,8 @@ def main():
     args = parse_args()
     submit_dir = args.submit_dir
     truth_dir = args.truth_dir
-    output_dir = args.output_dir
+    # output_dir = args.output_dir
+    output_dir = submit_dir
 
     if not os.path.isdir(submit_dir):
         print("%s doesn't exist" % submit_dir)
@@ -304,9 +320,11 @@ def main():
     pan_pred_json_file = os.path.join(submit_dir, 'pred.json')
     with open(pan_pred_json_file, 'r') as f:
         pred_jsons = json.load(f)
-    pan_gt_json_file = os.path.join(truth_dir, 'gt.json')
+    # pan_gt_json_file = os.path.join(truth_dir, 'gt.json')
+    pan_gt_json_file = args.pan_gt_json_file
     with open(pan_gt_json_file, 'r') as f:
         gt_jsons = json.load(f)
+
     categories = gt_jsons['categories']
     categories = {el['id']: el for el in categories}
     # ==> pred_json, gt_json, categories
@@ -316,7 +334,7 @@ def main():
     files = [item['file_name'].replace('_newImg8bit.png','_final_mask.png').replace('_leftImg8bit.png','_gtFine_color.png') for item in gt_jsons['images']]
     files.sort()
     for idx, file in enumerate(files):
-        image = np.array(Image.open(os.path.join(truth_dir, 'panoptic_video_vivid', file)))
+        image = np.array(Image.open(os.path.join(truth_dir, file)))
         gt_pans.append(image)
     print('==> gt_pans:', len(gt_pans), '//', time.time() - start_time,'sec')
 
@@ -336,8 +354,6 @@ def main():
 
     gt_pred_all = list(zip(gt_jsons, pred_jsons, gt_pans, pred_pans, gt_image_jsons))
     gt_pred_split = np.array_split(gt_pred_all, vid_num)
-    ### Validation 50 / Test 50
-    gt_pred_split = gt_pred_split[::2]
 
     start_time = time.time()
     vpq_all, vpq_thing, vpq_stuff = [], [], []

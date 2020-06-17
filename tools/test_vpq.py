@@ -78,7 +78,7 @@ def single_gpu_test(model, data_loader, show=False):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='MMDet test detector')
+    parser = argparse.ArgumentParser(description='VPSNet test')
     parser.add_argument('config', help='test config file path')
     parser.add_argument('checkpoint', help='checkpoint file')
     parser.add_argument('--out', help='output result file')
@@ -94,21 +94,21 @@ def parse_args():
     # parser.add_argument('--launcher', choices=['none', 'pytorch', 'slurm', 'mpi'], default='none', help='job launcher')
     parser.add_argument('--local_rank', type=int, default=0)
     # parser.add_argument('--n_video', type=int, default=10)
-    parser.add_argument('--dataset', type=str, default='Cityscapes')
-    parser.add_argument('--name', type=str, default='val0429')
+    parser.add_argument('--dataset', type=str, default='CityscapesExt')
+    # parser.add_argument('--name', type=str, default='val0429')
     # parser.add_argument('--txt_dir', type=str, default='demo3')
     parser.add_argument('--test_config', type=str, 
         default='configs/cityscapes/test_cityscapes_1gpu.yaml')
     
     # ---- VPQ - specific arguments
     parser.add_argument('--has_track', action='store_true')
-    parser.add_argument('--n_video', type=int, default=100)
-    parser.add_argument('--txt_dir', type=str, default='val0429')
-
-    parser.add_argument('--pan_gt_folder', type=str, 
-                        default='data/cityscapes_ext/val/panoptic_video_vivid/')
-    parser.add_argument('--pan_gt_json_file', type=str,
-                        default='data/cityscapes_ext/cityscapes_ext_panoptic_val_video.json')
+    parser.add_argument('--n_video', type=int, default=50)
+    # parser.add_argument('--txt_dir', type=str, default='val0429')
+    parser.add_argument('--pan_im_json_file', type=str, default='data/city_ext/panoptic_gt_test_city_vps.json')
+    # parser.add_argument('--pan_gt_folder', type=str, 
+    #                     default='data/cityscapes_ext/val/panoptic_video_vivid/')
+    # parser.add_argument('--pan_gt_json_file', type=str,
+    #                     default='data/cityscapes_ext/cityscapes_ext_panoptic_val_video.json')
     # (pan_gt_json_file=None, pan_gt_folder=None)
     
     args, rest = parser.parse_known_args()
@@ -190,7 +190,7 @@ def main():
     #         image_sets=config.dataset.test_image_set.split('+'), 
     #         # image_sets=args.out.split('.pkl')[0],
     #         flip=False,
-    #         result_path=args.out.split('.pkl')[0], 
+    #         result_path=args.out.split('.pkl')[0],
     #         phase='test')
     eval_helper_dataset = eval(args.dataset)()
 
@@ -208,36 +208,81 @@ def main():
     # *******************************************    
     # EVAL: VIDEO PANOPTIC SEGMENTATION
     # *******************************************
+    output_dir = args.out.replace('.pkl','_pans_unified/')
     print("==> Video Panoptic Segmentation results will be saved at:")
-    print("---", args.out.split('.pkl')[0]+'_pans_unified/')
+    print("---", output_dir)
 
-    obj_ids = outputs_pano['all_pano_obj_ids']
-    pred_pans_2ch_ = eval_helper_dataset.get_unified_pan_result(
-            outputs_pano['all_ssegs'],
-            outputs_pano['all_panos'], 
-            outputs_pano['all_pano_cls_inds'], 
-            obj_ids=obj_ids, 
-            stuff_area_limit=config.test.panoptic_stuff_area_limit, 
-            names=outputs_pano['all_names'])
+    # debug
+    # import json
+    # with open(args.pan_gt_json_file, 'r') as f:
+    #     gt_jsons = json.load(f)
 
-    pred_keys = [_ for _ in pred_pans_2ch_.keys()]
-    pred_keys.sort()
-    # pred_keys = pred_keys[4::5]
-    pred_pans_2ch = [pred_pans_2ch_[k] for k in pred_keys]
-    del pred_pans_2ch_
+    # val_jsons = {}
+    # val_jsons['images'] = gt_jsons['images']
+    # val_jsons['categories'] = gt_jsons['categories']
+    # # json.dump(val_jsons, open('data/cityscapes_ext/panoptic_cityscapes_ext_panoptic_val_pred.json','w'))
+    # with open('im_info_val_city_vps.json', 'r') as f:
+    #     iminfo = json.loads(f)
+    # pdb.set_trace()
+    # json.dump(gt_jsons, open('data/cityscapes_ext/cityscapes_ext_panoptic_val_video.json','w'))
+    # =====
+    # print(pred_keys)
+
+    import json
+    with open(args.pan_im_json_file,'r') as f:
+        im_jsons = json.load(f)
+    names = [x['file_name'] for x in im_jsons['images']]
+    names.sort()
+    categories = im_jsons['categories']
+
+    if args.load:
+        pans_2ch_pkl = args.out.replace('.pkl','_pred_pans_2ch.pkl')
+        pred_pans_2ch = pickle.load(open(pans_2ch_pkl, 'rb'))
+    else:
+        obj_ids = outputs_pano['all_pano_obj_ids']
+        pred_pans_2ch_ = eval_helper_dataset.get_unified_pan_result(
+                outputs_pano['all_ssegs'],
+                outputs_pano['all_panos'], 
+                outputs_pano['all_pano_cls_inds'], 
+                obj_ids=obj_ids, 
+                stuff_area_limit=config.test.panoptic_stuff_area_limit, 
+                names=outputs_pano['all_names'])
+        print('==== Done: vps_unified_pan_result ====')
+
+        ####
+        labeled_fid = 20
+        lambda_ = 5
+        pred_keys = [_ for _ in pred_pans_2ch_.keys()]
+        pred_keys.sort()
+        pred_keys = pred_keys[(labeled_fid//lambda_)::lambda_]
+        # pred_keys = pred_keys[4::5]
+        pred_pans_2ch = {k:pred_pans_2ch_[k] for k in pred_keys}
+        del pred_pans_2ch_
+        with open(args.out.replace('.pkl','_pred_pans_2ch.pkl'), 'wb') as f:
+            pickle.dump(pred_pans_2ch, f, protocol=2)
+    
+    pred_pans_2ch = [v for k,v in pred_pans_2ch.items()] 
     # ******************************
     # ['0005_0025_frankfurt_000000_001736_newImg8bit.png', '0005_0026_frankfurt_000000_001741_newImg8bit.png', '0005_0027_frankfurt_000000_001746_newImg8bit.png', '0005_0028_frankfurt_000000_001751_leftImg8bit.png']
     
     # ******************************
     # if not osp.exists(osp.join(args.out.split('.pkl')[0],args.txt_dir)):
     #     os.makedirs(osp.join(args.out.split('.pkl')[0],args.txt_dir))
-    
-    eval_helper_dataset.evaluate_panoptic_video(
-            pred_pans_2ch, args.out.replace('.pkl','_pans_unified'),
-            pan_gt_json_file=args.pan_gt_json_file,
-            pan_gt_folder=args.pan_gt_folder,
-            n_video=args.n_video,
-            save_name=args.txt_dir)
+    pred_pans, pred_json = eval_helper_dataset.inference_panoptic_video(
+                pred_pans_2ch, output_dir,
+                categories=categories,
+                names = names,
+                # pan_im_json_file=args.pan_im_json_file,
+                n_video=args.n_video)
+    print('==== Done: vps_inference ====')
+
+    # vpq_list = eval_helper_dataset.evaluate_panoptic_video(
+    #            pred_pans, pred_json, 
+    #            args.out.replace('.pkl','_pans_unified'),
+    #            pan_gt_json_file=args.pan_gt_json_file,
+    #            pan_gt_folder=args.pan_gt_folder,
+    #            n_video=args.n_video)
+    # print('==== Done: vps_evaluation ====')
 
 
 if __name__ == '__main__':

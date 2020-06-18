@@ -110,20 +110,6 @@ class UPSNetFPN(nn.Module):
             cls_im_mask = np.zeros((ori_shape[0], ori_shape[1])).astype(np.uint8)
             cls_im_mask[segm_pred_map==i] = 1
 
-            # if False and ignore_map is not None:
-            #     # DEBUG
-            #     # import matplotlib.pyplot as plt
-            #     # tmp = cls_im_mask.copy()
-            #     cls_im_mask[ignore_map]=0
-            #     # plt.subplot(331),plt.imshow(img)
-            #     # plt.subplot(332),plt.imshow(tmp)
-            #     # plt.subplot(333),plt.imshow(ignore_map)
-            #     # plt.subplot(334),plt.imshow(gt_seg)
-            #     # plt.subplot(335),plt.imshow(segm_pred_map)
-            #     # plt.subplot(336),plt.imshow(segm_feature_pred.sum(dim=(0,1)).cpu().numpy())
-            #     # plt.subplot(339),plt.imshow(cls_im_mask)
-            #     # plt.show()
-
             rle = mask_util.encode( np.array(cls_im_mask[:, :, np.newaxis], order='F'))[0]
             # cls_segms[i-1].append(rle)
             cls_segms[i].append(rle)

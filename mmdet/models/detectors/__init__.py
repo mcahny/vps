@@ -12,15 +12,17 @@ from .reppoints_detector import RepPointsDetector
 from .retinanet import RetinaNet
 from .rpn import RPN
 from .single_stage import SingleStageDetector
+# Modified for Video Panoptic Segmentation network
 from .two_stage import TwoStageDetector
-from .panoptic_flow_tcea import PanopticFlowTcea
-from .panoptic_track_flow_tcea import PanopticTrackFlowTcea
+from .panoptic_fuse import PanopticFuse
+from .panoptic_fusetrack import PanopticFuseTrack
 
 
 __all__ = [
-    'BaseDetector', 'SingleStageDetector', 'TwoStageDetector', 
+    'BaseDetector', 'SingleStageDetector', 
     'RPN', 'FastRCNN', 'FasterRCNN', 'MaskRCNN', 'CascadeRCNN', 
     'HybridTaskCascade', 'DoubleHeadRCNN', 'RetinaNet', 'FCOS', 
     'GridRCNN', 'MaskScoringRCNN', 'RepPointsDetector', 
-    'PanopticFlowTcea', 'PanopticTrackFlowTcea',  
+
+    'TwoStageDetector', 'PanopticFuse', 'PanopticFuseTrack',  
 ]

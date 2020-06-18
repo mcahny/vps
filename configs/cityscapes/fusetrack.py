@@ -1,6 +1,7 @@
 # model settings
 model = dict(
-    type='PanopticTrackFlowTcea',
+    # type='PanopticTrackFlowTcea',
+    type='PanopticFuseTrack',
     pretrained='modelzoo://resnet50',
     backbone=dict(
         type='ResNet',
@@ -127,6 +128,7 @@ train_cfg = dict(
         debug=False),
     loss_pano_weight=0.5,
     flownet2=[],
+    # Cityscapes specific class mapping
     class_mapping = {1:11, 2:12, 3:13, 4:14, 5:15, 6:16, 7:17, 8:18})
 test_cfg = dict(
     rpn=dict(
@@ -143,16 +145,20 @@ test_cfg = dict(
         mask_thr_binary=0.5),
     loss_pano_weight=None,
     flownet2=[],
+    # Cityscapes specific class mapping
     class_mapping = {1:11, 2:12, 3:13, 4:14, 5:15, 6:16, 7:17, 8:18})
 # dataset settings
-dataset_type = 'CityscapesVideoOfsDataset'
+# dataset_type = 'CityscapesVideoOfsDataset'
+dataset_type = 'CityscapesVPSDataset'
 data_root = 'data/cityscapes_vps/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
-    dict(type='LoadRefImageFromFile', span=[0]),
+    # dict(type='LoadRefImageFromFile', span=[0]),
+    dict(type='LoadRefImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True, 
         with_seg=True, with_pid=True,
+        # Cityscapes specific class mapping
         semantic2label={0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, 9:9,
                         10:10, 11:11, 12:12, 13:13, 14:14, 15:15, 16:16,
                         17:17, 18:18, -1:255, 255:255},),
@@ -164,7 +170,6 @@ train_pipeline = [
     dict(type='Pad', size_divisor=32),
     dict(type='SegResizeFlipCropPadRescale', scale_factor=[1, 0.25]),
     dict(type='DefaultFormatBundle'),
-
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 
             'gt_obj_ids', 'gt_masks', 'gt_semantic_seg', 
             'gt_semantic_seg_Nx', 'ref_img', 'ref_bboxes', 
@@ -213,9 +218,6 @@ data = dict(
     test=dict(
         type=dataset_type,
         ann_file=data_root +
-        # 'im_all_info_val_city_vps.json',
-        # img_prefix=data_root + 'val/img_all/',
-        # ref_prefix=data_root + 'val/img_all/',
         'im_all_info_test_city_vps.json',
         img_prefix=data_root + 'test/img_all/',
         ref_prefix=data_root + 'test/img_all/',

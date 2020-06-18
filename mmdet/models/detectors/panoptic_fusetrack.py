@@ -8,21 +8,21 @@ from mmdet.core import (bbox2result, bbox2roi, roi2bbox,
 from .two_stage import TwoStageDetector
 from ..import builder
 from ..registry import DETECTORS
-# Borrowed from Xiong et al. "UPSNet"
+# Borrowed from "UPSNet"
 from ..utils.unary_logits import (MaskTerm, SegTerm, 
                                   MaskMatching, MaskFcnTerm) 
 from ..utils.mask_removal import MaskRemoval
 from ..utils.mask_roi import MaskROI
+# flow modules
 from ..flow_modules import FlowNet2
 from ..flow_modules.resample2d_package.resample2d import Resample2d
 from ..utils.flow_utils import denormalize, rgb_denormalize, vis_flow
+
 import numpy as np
-import matplotlib.pyplot as plt
 import mmcv
-import pdb
 
 @DETECTORS.register_module
-class PanopticTrackFlowTcea(TwoStageDetector):
+class PanopticFuseTrack(TwoStageDetector):
 
     def __init__(self,
                  backbone,
@@ -39,7 +39,7 @@ class PanopticTrackFlowTcea(TwoStageDetector):
                  track_head=None,
                  shared_head=None,
                  pretrained=None):
-        super(PanopticTrackFlowTcea, self).__init__(
+        super(PanopticFuseTrack, self).__init__(
             backbone=backbone,
             neck=neck,
             extra_neck=extra_neck,
@@ -143,6 +143,7 @@ class PanopticTrackFlowTcea(TwoStageDetector):
         return flow, None
 
 
+    #### TRAIN code
     def forward_train(self,
                       img,
                       img_meta,
@@ -164,61 +165,7 @@ class PanopticTrackFlowTcea(TwoStageDetector):
                       gt_obj_ids=None,
                       # gt_flow=None,                     
                       ):
-        # #### DEBUG
-        # import matplotlib.pyplot as plt
-        # flow_warping = Resample2d().cuda()
-        # flow, _ = self.compute_flow(img.clone().detach(), ref_img.clone().detach(), 0.25)
-        # flo = flow.data[0].cpu().numpy().transpose(1,2,0)
-        # vis = vis_flow(flo)
-        # plt.subplot(131),plt.imshow(rgb_denormalize(img.data[0].cpu().numpy().transpose(1,2,0),self.std, self.mean).astype(np.uint8))
-        # plt.subplot(132),plt.imshow(vis)
-        # flow, _ = self.compute_flow(img.clone().detach(), ref_img.clone().detach())
-        # flo2 = flow.data[0].cpu().numpy().transpose(1,2,0)
-        # vis2 = vis_flow(flo2)
-        # plt.subplot(133),plt.imshow(vis2)
-        # plt.show()
-
-        # warp_img = flow_warping(ref_img, flow)
-        # diff_after = abs(img-warp_img)
-        # diff_before = abs(img-ref_img)
         
-        # img_ = rgb_denormalize(img.data[0].cpu().numpy().transpose(1,2,0),self.std, self.mean).astype(np.uint8)
-        # ref_img_ = rgb_denormalize(ref_img.data[0].cpu().numpy().transpose(1,2,0),self.std, self.mean).astype(np.uint8)
-        # warp_img_ = rgb_denormalize(warp_img.data[0].cpu().numpy().transpose(1,2,0),self.std, self.mean).astype(np.uint8)
-        # diff_before_ = rgb_denormalize(diff_before.data[0].cpu().numpy().transpose(1,2,0),self.std, self.mean).astype(np.uint8)
-        # diff_after_ = rgb_denormalize(diff_after.data[0].cpu().numpy().transpose(1,2,0),self.std, self.mean).astype(np.uint8)
-        # print(gt_obj_ids)
-        # print(ref_obj_ids)
-        # print(gt_pids)
-        # plt.subplot(251),plt.imshow(img_)
-        # plt.subplot(252),plt.imshow(ref_img_)
-        # mask = np.zeros_like(img_[:,:,0])
-        # gt_obj_ids = gt_obj_ids[0].data.cpu().numpy()
-        # gt_masks = gt_masks[0]
-        # for i in range(len(gt_masks)):
-        #     oid = gt_obj_ids[i]
-        #     m = gt_masks[i]
-        #     mask[m==1] = oid+1
-        # ref_mask = np.zeros_like(img_[:,:,0])
-        # ref_obj_ids = ref_obj_ids[0].data.cpu().numpy()
-        # ref_masks = ref_masks[0]
-        # for i in range(len(ref_masks)):
-        #     oid = ref_obj_ids[i]
-        #     m = ref_masks[i]
-        #     ref_mask[m==1] = oid+1
-        # plt.subplot(253),plt.imshow(mask)
-        # plt.subplot(254),plt.imshow(ref_mask)
-        # plt.subplot(255),plt.imshow(vis)
-        # plt.subplot(256),plt.imshow(warp_img_)
-        # plt.subplot(257),plt.imshow(diff_before_)
-        # plt.subplot(258),plt.imshow(diff_after_)
-        # gt_fcn = gt_semantic_seg.data[0].cpu().numpy()[0]
-        # ref_fcn = ref_semantic_seg.data[0].cpu().numpy()[0]
-        # plt.subplot(259),plt.imshow(gt_fcn)
-        # plt.subplot(2,5,10),plt.imshow(ref_fcn)
-        # plt.show()
-        # pdb.set_trace()   
-
         losses = dict()
 
         # ********************************
@@ -408,181 +355,7 @@ class PanopticTrackFlowTcea(TwoStageDetector):
         return losses
 
 
-    # ##################### REFERENCE FRAME ####################
-    # def forward_ref_train(self,
-    #                       x,
-    #                       gt_bboxes=None,
-    #                       gt_labels=None,
-    #                       ):
-    #     # Panoptic head forward ONLY
-    #     fcn_output, fcn_score = self.panopticFPN(x[0:self.panopticFPN.num_levels])
-    #     if gt_bboxes is not None and gt_labels is not None:
-    #         gt_rois = bbox2roi(gt_bboxes) # [#bbox, 5]
-    #         cls_idx = gt_labels[0] # [#bbox] / batch_size must be 1
-    #         # fcn_score # [1,20,200,400]
-    #         # compute mask logits with gt rois
-    #         mask_feats = self.mask_roi_extractor(
-    #                         x[:self.mask_roi_extractor.num_inputs], gt_rois)
-    #                         # [#bbox,256,14,14]
-    #         mask_score = self.mask_head(mask_feats) # [#bbox,#things+1,28,28], #things+1 =9
-    #         nobj,_,H,W = mask_score.shape
-    #         mask_score = mask_score.gather(1, cls_idx.view(-1,1,1,1).expand(-1,-1,H,W)) # [#bbox,1,28,28]
-    #         # compute panoptic FCN logits: in a FCN format !
-    #         mask_logits = self.mask_term(mask_score, gt_rois, cls_idx, fcn_score)
-    #         mask_fcn_logits = self.mask_fcn_term(mask_score, gt_rois, cls_idx, fcn_score)
-    #         panoptic_fcn_logits = fcn_score + mask_fcn_logits
-    #         return fcn_score, mask_logits, panoptic_fcn_logits
-
-    #     return fcn_output, fcn_score
-
-    ##################### TEST HELPERS ####################
-    # #########################################################
-    def simple_test_bboxes_flow(self,
-                               x,
-                               img_meta,
-                               proposals,
-                               rcnn_test_cfg,
-                               im_info,
-                               rescale=False,
-                               is_panoptic=True,
-                               fcn_score=None,
-                               flow=None):
-        """Test only det bboxes without augmentation."""
-        rois = bbox2roi(proposals)
-        roi_feats = self.bbox_roi_extractor(
-            x[:len(self.bbox_roi_extractor.featmap_strides)], rois)
-        cls_score, bbox_pred = self.bbox_head(roi_feats)
-        img_shape = img_meta[0]['img_shape']
-        scale_factor = img_meta[0]['scale_factor']
-        fid = int(img_meta[0]['filename'].split('_')[-1].split('.jpg')[0])
-        # is_first = img_meta[0]['is_first']
-        is_first = (fid==1)
-        #### For "mask_roi_panoptic"
-        cls_prob = F.softmax(cls_score, dim=1)
-        if is_first or (not is_first and self.prev_bboxes is None):
-            cls_prob, det_rois, cls_idx = self.mask_roi_panoptic(rois,
-                bbox_pred, cls_prob, im_info)
-        else:
-            cls_prob, det_rois, cls_idx = self.mask_roi(rois, bbox_pred,
-                cls_prob, im_info)
-
-        det_labels = cls_idx - 1
-        det_roi_feats = self.bbox_roi_extractor(
-            x[:self.bbox_roi_extractor.num_inputs], det_rois)
-        det_bboxes = roi2bbox(det_rois)[0]
-
-        #### MASK LOGIT
-        mask_feats = self.mask_roi_extractor(
-            x[:self.bbox_roi_extractor.num_inputs], det_rois)
-        mask_score = self.mask_head(mask_feats) # [#,#things+1,28,28], #things+1=9
-        nobj,_,H,W = mask_score.shape
-        mask_score = mask_score.gather(1, cls_idx.view(-1,1,1,1).expand(-1,-1,H,W)) # [#,1,28,28]
-        # sigmoid ==> [0,1]
-        mask_score = mask_score.sigmoid()
-        assert fcn_score is not None, "mask_logits needs fcn_score."
-        mask_logits = self.mask_term(mask_score, det_rois, cls_idx, fcn_score)
-        # [1,#,H/4,H/4]
-        #### original branch
-        if det_bboxes.nelement()==0:
-            det_obj_ids=np.array([], dtype=np.int64)
-            if is_first:
-                self.prev_bboxes =  None
-                self.prev_roi_feats = None
-                self.prev_det_labels = None
-                self.prev_mask_logits = None
-                self.prev_nobj = None
-            return det_bboxes, det_labels, det_obj_ids
-
-        # recompute bbox match feature
-        if is_first or (not is_first and self.prev_bboxes is None):
-            det_obj_ids = np.arange(det_bboxes.size(0))
-            best_match_scores = np.ones((det_bboxes.size(0))) * (-100) # 
-            # save bbox and features for later matching
-            self.prev_bboxes = det_bboxes
-            self.prev_roi_feats = det_roi_feats
-            self.prev_det_labels = det_labels
-            self.prev_mask_logits = mask_logits
-        else:
-            assert self.prev_roi_feats is not None
-            # only support one image at a time
-            bbox_img_n = [det_bboxes.size(0)] # eg. 4
-            prev_bbox_img_n = [self.prev_roi_feats.size(0)] # eg. 5
-            match_score = self.track_head(det_roi_feats, self.prev_roi_feats, bbox_img_n, prev_bbox_img_n)[0] # [4]
-            match_logprob = torch.nn.functional.log_softmax(match_score, dim=1)
-            label_delta = (self.prev_det_labels == det_labels.view(-1,1)).float()
-            bbox_ious = bbox_overlaps(det_bboxes[:,:4], self.prev_bboxes[:,:4])
-            #### warp mask iou
-            warp_mask_logits = self.flow_warping(self.prev_mask_logits, flow)
-            # update after warping
-            self.prev_mask_logits = warp_mask_logits
-            mask_binary = mask_logits[0] >= 0.5 # [20,H,W]
-            warp_binary = warp_mask_logits[0] >= 0.5 # [19,H,W]
-            mask_binary = mask_binary.unsqueeze(1).expand((-1,self.prev_bboxes.size(0),-1,-1))
-            warp_binary = warp_binary.unsqueeze(0).expand((nobj,-1,-1,-1))
-            intersection = (mask_binary * warp_binary).sum((-2,-1))
-            union = (mask_binary.sum((-2,-1)) + warp_binary.sum((-2,-1)) - intersection)
-            warp_mask_ious = intersection.float() / union.float()
-
-            # compute comprehensive score 
-            comp_scores = self.track_head.compute_comp_scores(match_logprob, 
-                # det_bboxes[:,4].view(-1, 1),
-                cls_prob.view(-1,1),
-                warp_mask_ious,
-                label_delta,
-                add_bbox_dummy=True) # [5]
-
-            match_likelihood, match_ids = torch.max(comp_scores, dim =1)
-            # translate match_ids to det_obj_ids, assign new id to new objects
-            # update tracking features/bboxes of exisiting object, 
-            # add tracking features/bboxes of new object
-            match_likelihood = match_likelihood.cpu().numpy()
-            match_ids = match_ids.cpu().numpy().astype(np.int32) # [4]
-            det_obj_ids = np.ones((match_ids.shape[0]), dtype=np.int32) * (-1) # [-1, -1, -1, -1]
-            best_match_scores = np.ones((self.prev_bboxes.size(0))) * (-100) # 
-            best_match_ids = np.ones((self.prev_bboxes.size(0)), dtype=np.int32) * (-1) # [-100, -100, -100, -100, -100]
-
-            for idx, match_id in enumerate(match_ids):
-                if match_id == 0:
-                    # add new object
-                    # NOTE. obj_ids is one of [0,1,...5], 
-                    # but is deducted by 1 later at "else". 
-                    # So, assign "5" makes sense.
-                    det_obj_ids[idx] = self.prev_roi_feats.size(0) # [5]
-                    self.prev_roi_feats = torch.cat((self.prev_roi_feats, det_roi_feats[idx][None]), dim=0)
-                    self.prev_bboxes = torch.cat((self.prev_bboxes, det_bboxes[idx][None]), dim=0)
-                    self.prev_mask_logits = torch.cat((self.prev_mask_logits, mask_logits[:,idx][:,None]), dim=1)
-                    self.prev_det_labels = torch.cat((self.prev_det_labels, det_labels[idx][None]), dim=0)
-                else:
-                    # multiple candidate might match with previous object, here we choose the one with
-                    # largest comprehensive score 
-                    obj_id = match_id - 1
-                    # match_score = comp_scores[idx, match_id]
-                    match_score = match_likelihood[idx]
-                    if match_score > best_match_scores[obj_id]:
-                        det_obj_ids[idx] = obj_id
-                        # if matched before, undo
-                        if best_match_ids[obj_id] >= 0: 
-                            det_obj_ids[best_match_ids[obj_id]] = -1
-                        best_match_scores[obj_id] = match_score
-                        best_match_ids[obj_id] = idx
-                        # udpate feature
-                        self.prev_roi_feats[obj_id] = det_roi_feats[idx]
-                        self.prev_bboxes[obj_id] = det_bboxes[idx]
-                        self.prev_mask_logits[:,obj_id] = mask_logits[:,idx]
-
-            #### Now, all the proposals considered REDUNDANT are marked "-1"
-            # Here, We assign "NEW" label to all these proposals.
-            for idx, det_obj_id in enumerate(det_obj_ids):
-                if det_obj_id >= 0:
-                    continue
-                det_obj_ids[idx] = self.prev_roi_feats.size(0) # [5]
-                self.prev_roi_feats = torch.cat((self.prev_roi_feats, det_roi_feats[idx][None]), dim=0)
-                self.prev_bboxes = torch.cat((self.prev_bboxes, det_bboxes[idx][None]), dim=0)
-                self.prev_mask_logits = torch.cat((self.prev_mask_logits, mask_logits[:,idx][:,None]), dim=1)
-                self.prev_det_labels = torch.cat((self.prev_det_labels, det_labels[idx][None]), dim=0)
-
-        return det_bboxes, det_labels, det_obj_ids, best_match_scores, cls_score, bbox_pred, cls_prob, det_rois, cls_idx 
-
+    #### TEST helpers
 
     def simple_test_bboxes(self,
                            x,
@@ -606,22 +379,7 @@ class PanopticTrackFlowTcea(TwoStageDetector):
         # vid = iid // 10000
         fid = iid % 10000
         is_first = (fid == 1)
-        # ### for VIPER:
-        # if 'city' in img_meta[0]['filename']:
-        #     #### for CITYSCAPES_EXT:
-        #     if 'iid' in img_meta[0]:
-        #         iid = img_meta[0]['iid']
-        #         # vid = iid // 10000
-        #         fid = iid % 10000
-        #         is_first = (fid == 1)
-        #     else:
-        #         vid = int(img_meta[0]['filename'].split('/')[-1].split('_')[0])
-        #         fid = int(img_meta[0]['filename'].split('/')[-1].split('_')[1])
-        #         is_first = (fid == vid*6 - 5)
-        # else:
-        #     fid = int(img_meta[0]['filename'].split('_')[-1].split('.jpg')[0])
-        #     is_first = (fid==1)
-        
+                
         #### For "mask_roi_panoptic"
         cls_prob = F.softmax(cls_score, dim=1)
         cls_prob, det_rois, cls_idx = self.mask_roi_panoptic(rois,
@@ -826,16 +584,7 @@ class PanopticTrackFlowTcea(TwoStageDetector):
         det_labels = det_labels[keep_inds] #[k]
         det_obj_ids = det_obj_ids[keep_inds] #[k]
         cls_prob = cls_prob[keep_inds] #[k]
-        #### filter out redundant detection
-        # best_inds = torch.index_select(det_obj_ids>=0, 0, 
-        #         torch.arange(0,det_obj_ids.size(0)).cuda())
-        # mask_rois = mask_rois[best_inds] #[k',5]
-        # cls_idx = cls_idx[best_inds] #[k']
-        # det_labels = det_labels[best_inds] #[k']
-        # det_obj_ids = det_obj_ids[best_inds] #[k']
-        # cls_prob = cls_prob[best_inds] #[k']
-        # mask_logits = mask_logits[:,best_inds] # [k']
-
+        
         # get semantic segm logits
         seg_stuff_logits, seg_inst_logits = self.seg_term(cls_idx, fcn_output, mask_rois*4.0)
         # seg_stuff_logits [1,11,1024,2048]
@@ -860,43 +609,3 @@ class PanopticTrackFlowTcea(TwoStageDetector):
         }
         return bbox_results, mask_results, pano_results
 
-
-
-
-
-    def aug_test(self, imgs, img_metas, rescale=False,
-                    img_ref=None, gt_flow=None):
-        """Test with augmentations.
-
-        If rescale is False, then returned bboxes and masks will fit the scale
-        of imgs[0].
-        """
-        # recompute feats to save memory
-        proposal_list = self.aug_test_rpn(
-            self.extract_feats(imgs, img_ref=img_ref, gt_flow=gt_flow), 
-                    img_metas, self.test_cfg.rpn)
-        det_bboxes, det_labels = self.aug_test_bboxes(
-            self.extract_feats(imgs, img_ref=img_ref, gt_flow=gt_flow),
-                    img_metas, proposal_list, self.test_cfg.rcnn)
-
-        if rescale:
-            _det_bboxes = det_bboxes
-        else:
-            _det_bboxes = det_bboxes.clone()
-            _det_bboxes[:, :4] *= img_metas[0][0]['scale_factor']
-        bbox_results = bbox2result(_det_bboxes, det_labels,
-                                   self.bbox_head.num_classes)
-
-        # det_bboxes always keep the original scale
-        if self.with_mask:
-            segm_results = self.aug_test_mask(
-                self.extract_feats(imgs, img_ref=img_ref, gt_flow=gt_flow), 
-                    img_metas, det_bboxes, det_labels)
-            # test with panoptic segm
-            if hasattr(self, 'panopticFPN') and self.panopticFPN is not None:
-                semantic_results = self.aug_test_semantic_segm(self.extract_feats(imgs), img_metas)
-                return bbox_results, segm_results, semantic_results
-
-            return bbox_results, segm_results
-        else:
-            return bbox_results

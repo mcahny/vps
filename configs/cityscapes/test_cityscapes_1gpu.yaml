@@ -1,6 +1,5 @@
 ---
-# output_path: "./output/upsnet/cityscapes"
-# model_prefix: "upsnet_resnet_50_cityscapes_"
+
 symbol: resnet_50_upsnet
 gpus: '0'
 # gpus: '0,1,2,3'
@@ -21,14 +20,11 @@ network:
   fcn_head: "FCNHead"
   fcn_num_layers: 2
   has_panoptic_head: true
-  # pretrained: "./model/upsnet_resnet_50_cityscapes_12000.pth"
-  # pretrained: "./model/pretrained_model/resnet-50-caffe.pth"
 
 test:
   scales:
   - 1024
   max_size: 2048
   batch_size: 1
-  # test_iteration: 12000
   panoptic_stuff_area_limit: 2048
   vis_mask: false

@@ -64,7 +64,6 @@ class BFPTcea(nn.Module):
         self.tcea_fusion = TCEA_Fusion(nf=self.in_channels,
                                        nframes=self.nframes,
                                        center=self.center)
-        # self.st_agg = ST_Aggregator(in_ch=self.in_channels, T=2)
         self.flow_warping = WarpingLayer()
 
         # if self.refine_type == 'conv':
@@ -101,7 +100,7 @@ class BFPTcea(nn.Module):
                               next_inputs=None, next_flow_init=None):
         assert len(inputs) == self.num_levels
         # inputs: B,C,H,W
-        # step1: gather multi-level features by resize and average
+        # Gather multi-level features by resize and average
         bsf = self.gather(inputs)
         ref_bsf = self.gather(ref_inputs)
         B,C,H,W = bsf.size()
@@ -121,15 +120,12 @@ class BFPTcea(nn.Module):
             bsf_stack = torch.stack([bsf, warp_bsf], dim=1)
         # B,2,C,H,W
         bsf = self.tcea_fusion(bsf_stack)
-        # bsf_stack = torch.stack([bsf, warp_bsf], dim=2)
-        # # B,C,2,H,W
-        # bsf = self.st_agg(bsf_stack).squeeze(2) # B,C,H,W
 
-        # step 3: refinement
+        # Refinement
         if self.refine_type is not None:
             bsf = self.refine(bsf)
 
-        # step 4: scatter refined features to multi-levels by residual path
+        # Scatter refined features to multi-levels by residual path
         outs = []
         for i in range(self.num_levels):
             out_size = inputs[i].size()[2:]

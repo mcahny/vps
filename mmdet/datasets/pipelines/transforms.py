@@ -467,66 +467,6 @@ class SegResizeFlipCropPadRescale(object):
         return self.__class__.__name__ + '(scale_factor={})'.format(
             self.scale_factor)
 
-# @PIPELINES.register_module
-# class FlowResizeFlipCropPadRescale(object):
-#     """A sequential transforms to semantic segmentation maps.
-
-#     The same pipeline as input images is applied to the semantic segmentation
-#     map, and finally rescale it by some scale factor. The transforms include:
-#     1. resize
-#     2. flip
-#     3. crop
-#     4. pad
-#     5. rescale (so that the final size can be different from the image size)
-
-#     Args:
-#         scale_factor (float): The scale factor of the final output.
-#     """
-
-#     def __init__(self, scale_factor=1):
-#         self.scale_factor = scale_factor
-
-#     def single_call(self, results, gt_flow):
-#         if results['keep_ratio']:
-#             gt_flow = mmcv.imrescale(
-#                 gt_flow,
-#                 results['scale'],
-#                 interpolation='bilinear')*results['scale_factor']
-#         else:
-#             gt_flow = mmcv.imresize(
-#                 gt_flow,
-#                 results['scale'],
-#                 interpolation='bilinear')*results['scale_factor']
-#         if results['flip']:
-#             gt_flow = mmcv.imflip(gt_flow)
-#             # if flip, reverse the x-axis values
-#             gt_flow[:,:,0] *= -1
-#         if 'crop_coords' in results:
-#             crds = results['crop_coords']
-#             gt_flow = gt_flow[crds[0]:crds[1], crds[2]:crds[3]]
-#         if gt_flow.shape[:2] != results['pad_shape'][:2]:
-#             raise ValueError('gt_flow shape does not match with pad_shape')
-#             # gt_flow = mmcv.impad(gt_flow, results['pad_shape'][:2])
-#         if self.scale_factor != 1:
-#             gt_flow = mmcv.imrescale(gt_flow, 
-#                 self.scale_factor, interpolation='bilinear')*self.scale_factor
-#         return gt_flow
-
-#     def __call__(self, results):
-#         if isinstance(results['gt_flow'], list):
-#             results_gt_flow = []
-#             for gt_flow in results['gt_flow']:
-#                 results_gt_flow.append(
-#                     self.single_call(results, gt_flow))
-#             results['gt_flow'] = results_gt_flow
-#         else:
-#             results['gt_flow'] = self.single_call(
-#                                     results, results['gt_Flow'])
-#         return results
-
-#     def __repr__(self):
-#         return self.__class__.__name__ + '(scale_factor={})'.format(
-#             self.scale_factor)
 
 
 @PIPELINES.register_module
@@ -581,29 +521,9 @@ class ImgResizeFlipNormCropPad(object):
                     results, results['ref_img'])
         return results
 
-        # if results['keep_ratio']:
-        #     img_ref = mmcv.imrescale(
-        #         results['img_ref'], results['scale'], return_scale=False)
-        # else:
-        #     img_ref = mmcv.imresize(
-        #         results['img_ref'], results['scale'], return_scale=False)
-        # if results['flip']:
-        #     img_ref = mmcv.imflip(img_ref)
-        # if results['img_norm_cfg']:
-        #     img_norm_cfg = results['img_norm_cfg']
-        #     img_ref = mmcv.imnormalize(img_ref, img_norm_cfg['mean'],
-        #                         img_norm_cfg['std'], img_norm_cfg['to_rgb'])
-        # if 'crop_coords' in results:
-        #     crds = results['crop_coords']
-        #     img_ref = img_ref[crds[0]:crds[1], crds[2]:crds[3], :]
-        # if img_ref.shape != results['pad_shape']:
-        #     img_ref = mmcv.impad(img_ref, results['pad_shape'][:2])
-        # results['img_ref'] = img_ref
-        # return results
-
+     
     def __repr__(self):
-        # return self.__class__.__name__ + '(scale_factor={})'.format(
-        #     self.scale_factor)
+
         return self.__class__.__name__
 
 

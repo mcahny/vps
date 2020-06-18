@@ -2,18 +2,18 @@ import datetime
 
 INFO = {
     "description": "City2CocoStyle",
-    "url": "https://github.com/mcahny/pycococreator",
+    "url": "https://github.com/mcahny/vps",
     "version": "0.1.0",
     "year": 2019,
-    "contributor": "dahun kim",
+    "contributor": "Dahun Kim",
     "date_created": datetime.datetime.utcnow().isoformat(' ')
 }
 
 LICENSES = [
     {
-        "id": 1234,
-        "name": " ",
-        "url": " "
+        "id": 0,
+        "name": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.",
+        "url": "http://creativecommons.org/licenses/by-nc-sa/4.0/"
     }
 ]
 CATEGORIES = [
@@ -211,9 +211,3 @@ CATEGORIES = [
 ]
 
 
-# if __name__=="__main__":
-#     import json
-#     dict_name = 'panoptic_viper_categories.json'
-#     with open(dict_name, 'w') as f:
-#         json.dump(CATEGORIES,f)
-#         

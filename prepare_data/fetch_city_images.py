@@ -3,7 +3,6 @@ import os.path as osp
 import shutil
 import argparse
 import json
-import pdb
 
 parser = argparse.ArgumentParser(description='Fetch City sequence images')
 parser.add_argument('--mode', type=str, default='train')

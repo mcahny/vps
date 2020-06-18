@@ -1,3 +1,10 @@
+# -------------------------------------------------------------------
+# Video Panoptic Segmentation
+#
+# VPQ evaluation code by tube (video segment) matching
+# Inference on every frames and evaluation on every 5 frames.
+# ------------------------------------------------------------------
+
 import argparse
 import sys
 import os
@@ -63,51 +70,35 @@ class PQStat():
         return {'pq': pq / n, 'sq': sq / n, 'rq': rq / n, 'n': n}, per_class_results
 
 
-# def vpq_compute_single_core(gt_jsons_set, pred_jsons_set, gt_pans_set, pred_pans_set, gt_image_jsons_set, categories, nframes=2):
 def vpq_compute_single_core(gt_pred_set, categories, nframes=2):
     OFFSET = 256 * 256 * 256
     VOID = 0
     vpq_stat = PQStat()
-    # nframes=2
-    # gt_pred_set: len=6
-    # idx: 0,1,2,3,4
-    # start_time = time.time()
-    # for idx in range(0, len(gt_pans_set)-nframes+1): 
+
+    # Iterate over the video frames 0::T-λ
     for idx in range(0, len(gt_pred_set)-nframes+1): 
-        # print('idx:', idx)
         vid_pan_gt, vid_pan_pred = [], []
         gt_segms_list, pred_segms_list = [], []
-        # vid_pan_set = \
-        #     zip(gt_jsons_set[idx:idx+nframes], 
-        #         pred_jsons_set[idx:idx+nframes],
-        #         gt_pans_set[idx:idx+nframes],
-        #         pred_pans_set[idx:idx+nframes],
-        #         gt_image_jsons_set[idx:idx+nframes])
 
-        #### Output VPQ value for "nframe" volume.
-        # Step1. to merge jsons and pan maps in the volume.
-        # for gt_json, pred_json, gt_pan, pred_pan, gt_image_json in vid_pan_set:
+        # Matching nframes-long tubes.
+        # Collect tube IoU, TP, FP, FN
         for i, (gt_json, pred_json, gt_pan, pred_pan, gt_image_json) in enumerate(gt_pred_set[idx:idx+nframes]):
-            
+            #### Step1. Collect frame-level pan_gt, pan_pred, etc.
             gt_pan, pred_pan = np.uint32(gt_pan), np.uint32(pred_pan)
             pan_gt = gt_pan[:, :, 0] + gt_pan[:, :, 1] * 256 + gt_pan[:, :, 2] * 256 * 256
             pan_pred = pred_pan[:, :, 0] + pred_pan[:, :, 1] * 256 + pred_pan[:, :, 2] * 256 * 256
-            # gt_segms = {el['id']: el for el in gt_json['segments_info']}
             gt_segms = {}
             for el in gt_json['segments_info']:
                 if el['id'] in gt_segms:
                     gt_segms[el['id']]['area'] += el['area']
                 else:
                     gt_segms[el['id']] = el
-
-            # pred_segms = {el['id']: el for el in pred_json['segments_info']}
             pred_segms = {}
             for el in pred_json['segments_info']:
                 if el['id'] in pred_segms:
                     pred_segms[el['id']]['area'] += el['area']
                 else:
                     pred_segms[el['id']] = el
-
             # predicted segments area calculation + prediction sanity checks
             pred_labels_set = set(el['id'] for el in pred_json['segments_info'])
             labels, labels_cnt = np.unique(pan_pred, return_counts=True)
@@ -115,8 +106,6 @@ def vpq_compute_single_core(gt_pred_set, categories, nframes=2):
                 if label not in pred_segms:
                     if label == VOID:
                         continue
-                    print('=== idx:', idx)
-                    pdb.set_trace()
                     raise KeyError('Segment with ID {} is presented in PNG and not presented in JSON.'.format(label))
                 pred_segms[label]['area'] = label_cnt
                 pred_labels_set.remove(label)
@@ -125,31 +114,30 @@ def vpq_compute_single_core(gt_pred_set, categories, nframes=2):
             if len(pred_labels_set) != 0:
                 raise KeyError(
                     'The following segment IDs {} are presented in JSON and not presented in PNG.'.format(list(pred_labels_set)))
-            #### Collect frame-lavel pan_map, jsons, etc.
+
             vid_pan_gt.append(pan_gt)
             vid_pan_pred.append(pan_pred)
             gt_segms_list.append(gt_segms)
             pred_segms_list.append(pred_segms)
 
-        # Step 2. stack the collected elements ==> tube-level 
-        vid_pan_gt = np.stack(vid_pan_gt) # [nf,1080,1920]
-        vid_pan_pred = np.stack(vid_pan_pred) # [nf,1080,1920]
+        #### Step 2. Concatenate the collected items -> tube-level. 
+        vid_pan_gt = np.stack(vid_pan_gt) # [nf,H,W]
+        vid_pan_pred = np.stack(vid_pan_pred) # [nf,H,W]
         vid_gt_segms, vid_pred_segms = {}, {}
         for gt_segms, pred_segms in zip(gt_segms_list, pred_segms_list):
-            # merge 'area' only for gt_segms
+            # aggregate into tube 'area'
             for k in gt_segms.keys():
                 if not k in vid_gt_segms:
                     vid_gt_segms[k] = gt_segms[k]
                 else:
                     vid_gt_segms[k]['area'] += gt_segms[k]['area']
-            # merge 'area' only for pred_segms
             for k in pred_segms.keys():
                 if not k in vid_pred_segms:
                     vid_pred_segms[k] = pred_segms[k]
                 else:
                     vid_pred_segms[k]['area'] += pred_segms[k]['area']
 
-        # Step3. Confusion matrix calculation
+        #### Step3. Confusion matrix calculation
         vid_pan_gt_pred = vid_pan_gt.astype(np.uint64) * OFFSET + vid_pan_pred.astype(np.uint64)
         gt_pred_map = {}
         labels, labels_cnt = np.unique(vid_pan_gt_pred, return_counts=True)
@@ -159,21 +147,15 @@ def vpq_compute_single_core(gt_pred_set, categories, nframes=2):
             gt_pred_map[(gt_id, pred_id)] = intersection
 
         # count all matched pairs
-        # gt_small = set()
         gt_matched = set()
         pred_matched = set()
         tp = 0
         fp = 0
         fn = 0
 
-        # Area calculation
-        # vid_gt_labels, vid_gt_labels_cnt = np.unique(vid_pan_gt, return_counts=True)
-
+        #### Step4. Tube matching
         for label_tuple, intersection in gt_pred_map.items():
             gt_label, pred_label = label_tuple
-            # debug
-            # pred_area = (vid_pan_pred == pred_label).sum()
-            # gt_area = (vid_pan_gt == gt_label).sum()
 
             if gt_label not in vid_gt_segms:
                 continue
@@ -185,30 +167,11 @@ def vpq_compute_single_core(gt_pred_set, categories, nframes=2):
                     vid_pred_segms[pred_label]['category_id']:
                 continue
 
-            # union = pred_area + gt_area - intersection - gt_pred_map.get((VOID, pred_label),0)
-            # if pred_area != vid_pred_segms[pred_label]['area']:
-            #     print('pred', pred_area, vid_pred_segms[pred_label]['area'])
-            #     pdb.set_trace()
-
-            # if gt_area != vid_gt_segms[gt_label]['area']:
-            #     print('gt', gt_area, vid_gt_segms[gt_label]['area'])
-            #     pdb.set_trace()
-
             union = vid_pred_segms[pred_label]['area'] + vid_gt_segms[gt_label]['area'] - intersection - gt_pred_map.get(
                 (VOID, pred_label), 0)
             iou = intersection / union
-
-            # ignore invalid iou value
-            # if iou > 1.0:
-            #     pred_area = (vid_pan_pred == pred_label).sum()
-            #     gt_area = (vid_pan_gt == gt_label).sum()
-            #     if vid_pred_segms[pred_label]['area'] != pred_area:
-            #         print('pred_area mismatch, iou:', iou)
-            #     if vid_gt_segms[gt_label]['area'] != gt_area:
-            #         print('gt_area mismatch, iou:', iou)
-            #     pdb.set_trace()
             assert iou <= 1.0, 'INVALID IOU VALUE : %d'%(gt_label)
-
+            # count true positives
             if iou > 0.5:
                 vpq_stat[vid_gt_segms[gt_label]['category_id']].tp += 1
                 vpq_stat[vid_gt_segms[gt_label]['category_id']].iou += iou
@@ -225,8 +188,6 @@ def vpq_compute_single_core(gt_pred_set, categories, nframes=2):
             if gt_info['iscrowd'] == 1:
                 crowd_labels_dict[gt_info['category_id']] = gt_label
                 continue
-            # if gt_label in gt_small:
-            #     continue
             vpq_stat[gt_info['category_id']].fn += 1
             fn += 1
 
@@ -254,11 +215,10 @@ def vpq_compute(gt_pred_split, categories, nframes, output_dir):
     for idx, gt_pred_set in enumerate(gt_pred_split):
         tmp = vpq_compute_single_core(gt_pred_set, categories, nframes=nframes)
         vpq_stat += tmp
-        
+
     # hyperparameter: window size k
     k = (nframes-1)*5
     print('==> %d-frame vpq_stat:'%(k), time.time()-start_time, 'sec')
-
     metrics = [("All", None), ("Things", True), ("Stuff", False)]
     results = {}
     for name, isthing in metrics:
@@ -285,17 +245,15 @@ def vpq_compute(gt_pred_split, categories, nframes, output_dir):
 
     return vpq_all, vpq_thing, vpq_stuff
 
+
 def parse_args():
     parser = argparse.ArgumentParser(description='VPSNet eval')
     parser.add_argument('--submit_dir', type=str,
-        help='test outout directory', default='work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/val0430_pans_unified/') 
+        help='test outout directory', default='work_dirs/cityscapes_vps/fusetrack_vpct/val_pans_unified/') 
     parser.add_argument('--truth_dir', type=str, 
-        help='ground truth directory', default='data/cityscapes_ext/validation/panoptic_video')
+        help='ground truth directory', default='data/cityscapes_vps/val/panoptic_video')
     parser.add_argument('--pan_gt_json_file', type=str, 
-        help='ground truth directory', default='data/cityscapes_ext/validation/cityscapes_ext_panoptic_validation_video.json')
-    # parser.add_argument('--output_dir', type=str,
-    #     default='work_dirs/cityscapes_ext/ups_pano_ext_fusetrack_vpct/val_pans_unified/')
-    
+        help='ground truth directory', default='data/cityscapes_vps/panpotic_gt_val_city_vps.json')    
     args = parser.parse_args()
     return args
 
@@ -305,22 +263,17 @@ def main():
     args = parse_args()
     submit_dir = args.submit_dir
     truth_dir = args.truth_dir
-    # output_dir = args.output_dir
     output_dir = submit_dir
-
     if not os.path.isdir(submit_dir):
         print("%s doesn't exist" % submit_dir)
-
     if os.path.isdir(submit_dir) and os.path.isdir(truth_dir):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
     start_all = time.time()
-
     pan_pred_json_file = os.path.join(submit_dir, 'pred.json')
     with open(pan_pred_json_file, 'r') as f:
         pred_jsons = json.load(f)
-    # pan_gt_json_file = os.path.join(truth_dir, 'gt.json')
     pan_gt_json_file = args.pan_gt_json_file
     with open(pan_gt_json_file, 'r') as f:
         gt_jsons = json.load(f)

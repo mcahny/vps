@@ -24,7 +24,7 @@ Image-level baseline (left) / **VPSNet** result (right)
 This repo is tested under Python 3.7, PyTorch 1.4, Cuda 10.0, and mmcv==0.2.14.
 
 ## Installation
-a. This repo is built based on [mmdetection](https://github.com/open-mmlab/mmdetection) commit hash `4357697`. Please refer to [INSTALL.md](docs/INSTALL.md) to install the library.
+a. This repo is built based on [mmdetection](https://github.com/open-mmlab/mmdetection) commit hash `4357697`. Modified files are listed [here](mmdet/readme.txt). Please refer to [INSTALL.md](docs/INSTALL.md) to install the library.
 You can use following commands to create conda env with related dependencies.
 ```
 conda create -n vps python=3.7 -y
@@ -80,7 +80,20 @@ mmdetection
 │   │   ├── test
 │   │   │   ├── img_all
 ```
-
+Directory structure for the Cityscapes image panoptic segmentation (IPS) is as follows.
+```
+│   ├── cityscapes
+│   │   ├── annotations
+│   │   │   ├── instancesonly_gtFine_train.json
+│   │   │   ├── instancesonly_pano_gtFine_val.json
+│   │   │   ├── cityscapes_fine_val.json
+│   │   ├── panoptic
+│   │   ├── train
+│   │   ├── train_nbr
+│   │   ├── labels
+│   │   ├── val
+│   │   ├── val_nbr
+```
 ## Testing
 Our trained models are available for download at Google Drive. Run the following command to test the model on Cityscapes and Cityscapes-VPS.
 

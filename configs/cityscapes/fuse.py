@@ -1,6 +1,7 @@
 # model settings
 model = dict(
-    type='PanopticFlowTcea',
+    type='PanopticFuse',
+    # type='PanopticFlowTcea',
     pretrained='modelzoo://resnet50',
     backbone=dict(
         type='ResNet',
@@ -118,6 +119,7 @@ train_cfg = dict(
         debug=False),
     loss_pano_weight=0.5,
     flownet2=[],
+    # Cityscapes specific class mapping
     class_mapping = {1:11, 2:12, 3:13, 4:14, 5:15, 6:16, 7:17, 8:18})
 test_cfg = dict(
     rpn=dict(
@@ -135,6 +137,7 @@ test_cfg = dict(
     loss_pano_weight=None,
     flownet2=[],
     # for panoptic head 
+    # Cityscapes specific class mapping
     class_mapping = {1:11, 2:12, 3:13, 4:14, 5:15, 6:16, 7:17, 8:18})
 # dataset settings
 dataset_type = 'CityscapesDataset'
@@ -142,10 +145,10 @@ data_root = 'data/cityscapes/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
-    # dict(type='LoadRefImageFromFile', span=[0]),
     dict(type='LoadRefImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True, 
         with_seg=True,
+        # Cityscapes specific class mapping
         semantic2label={0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, 9:9,
                         10:10, 11:11, 12:12, 13:13, 14:14, 15:15, 16:16,
                         17:17, 18:18, -1:255, 255:255},),
@@ -161,7 +164,6 @@ train_pipeline = [
              'gt_masks', 'gt_semantic_seg', 'gt_semantic_seg_Nx']),
 ]
 test_pipeline = [
-    # dict(type='LoadRefImageFromFile', span=[-1]),
     dict(type='LoadRefImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
@@ -205,7 +207,6 @@ data = dict(
         ref_prefix=data_root + 'val_nbr/',
         pipeline=test_pipeline))
 # optimizer
-# lr is set for a batch size of 8
 optimizer = dict(type='SGD', lr=0.005, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
@@ -214,7 +215,6 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=500,
     warmup_ratio=1.0 / 3,
-    # step=[8,11])
     step=[16,22])
 checkpoint_config = dict(interval=12)
 # yapf:disable
@@ -222,17 +222,14 @@ log_config = dict(
     interval=100,
     hooks=[
         dict(type='TextLoggerHook'),
-        # dict(type='TensorboardLoggerHook')
     ])
 # yapf:enable
 # runtime settings
-# total_epochs = 12
 total_epochs = 24
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
+
 work_dir = './work_dirs/cityscapes/fuse_vpct'
 load_from = './work_dirs/viper/fuse/latest.pth'
-# load_from = './work_dirs/panopticFPN_coco/latest.pth'
-# load_from = None
 resume_from = None
 workflow = [('train', 1)]

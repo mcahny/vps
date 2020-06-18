@@ -1,5 +1,6 @@
-# -------------------------------------------------------------------
-# Modified from the evaluation code in Unified Panoptic Segmentation Network https://github.com/uber-research/UPSNet
+# ------------------------------------------------------------------
+# Modified from the Unified Panoptic Segmentation Network 
+# (https://github.com/uber-research/UPSNet)
 # ------------------------------------------------------------------
 
 from __future__ import print_function
@@ -7,9 +8,8 @@ import os
 import sys
 import torch
 import torch.utils.data
-import pickle, gzip
+import pickle
 import numpy as np
-import scipy.io as sio
 import cv2
 import json
 import torch.multiprocessing as multiprocessing
@@ -18,9 +18,6 @@ from PIL import Image, ImageDraw
 from collections import defaultdict, Sequence
 from pycocotools.coco import COCO
 from tools.config.config import config
-import networkx as nx
-from lib.utils.logging import logger
-import pycocotools.mask as mask_util
 
 # panoptic visualization
 vis_panoptic = False

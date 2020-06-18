@@ -6,7 +6,6 @@ import torch
 from mmcv.parallel import DataContainer as DC
 
 from ..registry import PIPELINES
-import pdb
 
 def to_tensor(data):
     """Convert objects of various python types to :obj:`torch.Tensor`.
@@ -160,29 +159,7 @@ class DefaultFormatBundle(object):
         if 'ref_semantic_seg_Nx' in results:
             results['ref_semantic_seg_Nx'] = DC(
                 to_tensor(results['ref_semantic_seg_Nx'][None,:,:]), stack=True)
-
-        # if 'ref_img' in results:
-        #     if isinstance(results['ref_img'], list):
-        #         img_ref = []
-        #         for img in results['ref_img']:
-        #             img = np.ascontiguousarray(img.transpose(2,0,1))
-        #             img_ref.append(img)
-        #         img_ref = np.array(img_ref)
-        #         results['ref_img'] = DC(to_tensor(img_ref), stack=True)
-        #     else:
-        #         img = np.ascontiguousarray(results['ref_img'].transpose(2, 0, 1))
-        #         results['ref_img'] = DC(to_tensor(img), stack=True)
-        # if 'gt_flow' in results:
-        #     if isinstance(results['gt_flow'], list):
-        #         gt_flow=[]
-        #         for flo in results['gt_flow']:
-        #             flo = np.ascontiguousarray(flo.transpose(2,0,1))
-        #             gt_flow.append(flo)
-        #         gt_flow = np.array(gt_flow)
-        #         results['gt_flow'] = DC(to_tensor(gt_flow), stack=True)
-        #     else:
-        #         gt_flow = np.ascontiguousarray(results['gt_flow'].transpose(2,0,1))
-        #         results['gt_flow'] = DC(to_tensor(gt_flow), stack=True)
+            
         return results
 
     def __repr__(self):

@@ -1,3 +1,8 @@
+# -------------------------------------------------
+# Modified based on:
+# Video Instance Segmentation
+# (https://github.com/youtubevos/MaskTrackRCNN/)
+#---------------------------------------------------
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -118,7 +123,7 @@ class TrackHead(nn.Module):
             match_score = []
             for prod in prods:
                 m = prod.size(0)
-                dummy = torch.zeros( m, 1, device=torch.cuda.current_device())
+                dummy = torch.zeros(m, 1, device=torch.cuda.current_device())
                 
                 prod_ext = torch.cat([dummy, prod], dim=1)
                 match_score.append(prod_ext)
@@ -152,8 +157,9 @@ class TrackHead(nn.Module):
                 #     score, cur_ids, cur_weights, reduce=reduce)
                 loss_match += self.loss_match(
                         score, cur_ids, cur_weights, reduce=reduce)
-                match_acc += accuracy(torch.index_select(score, 0, valid_idx), 
-                                      torch.index_select(cur_ids,0, valid_idx)) * n_valid
+                match_acc += accuracy(
+                        torch.index_select(score, 0, valid_idx), 
+                        torch.index_select(cur_ids,0, valid_idx)) * n_valid
             losses['loss_match'] = loss_match / n
             if n_total > 0:
                 losses['match_acc'] = match_acc / n_total
@@ -163,7 +169,9 @@ class TrackHead(nn.Module):
               # losses['loss_match'] = weighted_cross_entropy(
               #     match_score, ids, id_weights, reduce=reduce)
               losses['loss_match'] = self.loss_match(
-                        match_score, ids, id_weights, reduce=reduce)
-              losses['match_acc'] = accuracy(torch.index_select(match_score, 0, valid_idx),                           torch.index_select(ids, 0, valid_idx))
+                    match_score, ids, id_weights, reduce=reduce)
+              losses['match_acc'] = accuracy(
+                    torch.index_select(match_score, 0, valid_idx),
+                    torch.index_select(ids, 0, valid_idx))
         return losses
 

@@ -106,12 +106,10 @@ class CustomDataset(Dataset):
     def pre_pipeline(self, results):
         results['img_prefix'] = self.img_prefix
         results['seg_prefix'] = self.seg_prefix
-        # results['flow_prefix'] = self.flow_prefix
         results['ref_prefix'] = self.ref_prefix
         results['proposal_file'] = self.proposal_file
         results['bbox_fields'] = []
         results['mask_fields'] = []
-        # results['trainId2label'] = trainId2label
         
     def _filter_imgs(self, min_size=32):
         """Filter images too small."""
@@ -146,7 +144,6 @@ class CustomDataset(Dataset):
                 idx = self._rand_another(idx)
                 continue
             return data
-        # return self.getitem(idx)
     
     def getitem(self, idx):
         if self.test_mode:

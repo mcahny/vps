@@ -7,21 +7,21 @@ from mmdet.core import (bbox2result, bbox2roi, build_assigner,
 from .two_stage import TwoStageDetector
 from ..import builder
 from ..registry import DETECTORS
-# Borrowed from Xiong et al. "UPSNet"
+# Borrowed from "UPSNet"
 from ..utils.unary_logits import (MaskTerm, SegTerm, 
                                   MaskMatching, MaskFcnTerm) 
 from ..utils.mask_removal import MaskRemoval
 from ..utils.mask_roi import MaskROI
+# flow modules
 from ..flow_modules import FlowNet2
 from ..flow_modules.resample2d_package.resample2d import Resample2d
 from ..utils.flow_utils import denormalize, rgb_denormalize, vis_flow
+
 import numpy as np
-import matplotlib.pyplot as plt
 import mmcv
-import pdb
 
 @DETECTORS.register_module
-class PanopticFlowTcea(TwoStageDetector):
+class PanopticFuse(TwoStageDetector):
 
     def __init__(self,
                  backbone,
@@ -38,7 +38,7 @@ class PanopticFlowTcea(TwoStageDetector):
                  track_head=None,
                  shared_head=None,
                  pretrained=None):
-        super(PanopticFlowTcea, self).__init__(
+        super(PanopticFuse, self).__init__(
             backbone=backbone,
             neck=neck,
             extra_neck=extra_neck,
@@ -146,7 +146,7 @@ class PanopticFlowTcea(TwoStageDetector):
                 mode='bilinear', align_corners=False) * scale_factor
         return flow, None
 
-
+    #### TRAIN
     def forward_train(self,
                       img,
                       img_meta,
@@ -168,52 +168,6 @@ class PanopticFlowTcea(TwoStageDetector):
                       gt_obj_ids=None,
                       # gt_flow=None,                     
                       ):
-        # #### DEBUG
-        # flow_warping = Resample2d().cuda()
-        # flow, occ_mask = self.compute_flow(img.clone().detach(), ref_img.clone().detach())
-        # warp_img = flow_warping(ref_img, flow)
-        # diff_after = abs(img-warp_img)
-        # diff_before = abs(img-ref_img)
-        # flo = flow.data[0].cpu().numpy().transpose(1,2,0)
-        # vis = vis_flow(flo)
-        # import matplotlib.pyplot as plt
-        # img_ = self.rgb_denormalize(img.data[0].cpu().numpy().transpose(1,2,0)).astype(np.uint8)
-        # ref_img_ = self.rgb_denormalize(ref_img.data[0].cpu().numpy().transpose(1,2,0)).astype(np.uint8)
-        # warp_img_ = self.rgb_denormalize(warp_img.data[0].cpu().numpy().transpose(1,2,0)).astype(np.uint8)
-        # diff_before_ = self.rgb_denormalize(diff_before.data[0].cpu().numpy().transpose(1,2,0)).astype(np.uint8)
-        # diff_after_ = self.rgb_denormalize(diff_after.data[0].cpu().numpy().transpose(1,2,0)).astype(np.uint8)
-        # # print(gt_obj_ids)
-        # # print(ref_obj_ids)
-        # # print(gt_pids)
-        # plt.subplot(241),plt.imshow(img_)
-        # plt.subplot(242),plt.imshow(ref_img_)
-        # # pdb.set_trace()
-        # # mask = np.zeros_like(img_[:,:,0])
-        # # gt_obj_ids = gt_obj_ids[0].data.cpu().numpy()
-        # # gt_masks = gt_masks[0]
-        # # for i in range(len(gt_masks)):
-        # #     oid = gt_obj_ids[i]
-        # #     m = gt_masks[i]
-        # #     mask[m==1] = oid+1
-        # # ref_mask = np.zeros_like(img_[:,:,0])
-        # # ref_obj_ids = ref_obj_ids[0].data.cpu().numpy()
-        # # ref_masks = ref_masks[0]
-        # # for i in range(len(ref_masks)):
-        # #     oid = ref_obj_ids[i]
-        # #     m = ref_masks[i]
-        # #     ref_mask[m==1] = oid+1
-        # # plt.subplot(253),plt.imshow(mask)
-        # # plt.subplot(254),plt.imshow(ref_mask)
-        # plt.subplot(243),plt.imshow(vis)
-        # plt.subplot(244),plt.imshow(warp_img_)
-        # plt.subplot(245),plt.imshow(diff_before_)
-        # plt.subplot(246),plt.imshow(diff_after_)
-        # gt_fcn = gt_semantic_seg.data[0].cpu().numpy()[0]
-        # # ref_fcn = ref_semantic_seg.data[0].cpu().numpy()[0]
-        # plt.subplot(247),plt.imshow(gt_fcn)
-        # plt.subplot(2,5,10),plt.imshow(ref_fcn)
-        # plt.show()
-        # pdb.set_trace()
 
         losses = dict()
 
@@ -380,69 +334,8 @@ class PanopticFlowTcea(TwoStageDetector):
 
         return losses
 
-        # # ***************************************
-        # # PANOPTIC HEAD - Only for BATCH SIZE: 1
-        # # ***************************************
-        # if hasattr(self.train_cfg, 'loss_pano_weight'):
-        #     # extract gt rois for panpotic head
-        #     gt_rois = bbox2roi(gt_bboxes) # [#bbox, 5]
-        #     cls_idx = gt_labels[0] # [#bbox] / batch_size must be 1
-        #     # fcn_score # [1,20,200,400]
-        #     # compute mask logits with gt rois
-        #     mask_feats = self.mask_roi_extractor(
-        #                     x[:self.mask_roi_extractor.num_inputs], gt_rois)
-        #                     # [#bbox,256,14,14]
-        #     mask_score = self.mask_head(mask_feats) # [#bbox,#things+1,28,28], #things+1=9
-        #     nobj,_,H,W = mask_score.shape
-        #     mask_score = mask_score.gather(1, cls_idx.view(-1,1,1,1).expand(-1,-1,H,W)) # [#bbox,1,28,28]
-        #     # compute panoptic logits
-        #     seg_stuff_logits, seg_inst_logits = self.seg_term(cls_idx, fcn_score, gt_rois)
-        #     mask_logits = self.mask_term(mask_score, gt_rois, cls_idx, fcn_score)
-        #     # panoptic_logits: [1,#stuff+#bbox,200,400]
-        #     panoptic_logits = torch.cat([seg_stuff_logits, (seg_inst_logits + mask_logits)], 
-        #         dim=1)
-        #     # generate gt for panoptic head
-        #     # added for panoptic gt generation : gt_masks_4x
-        #     gt_masks_4x = gt_masks[0][:,::4,::4]
-        #     with torch.no_grad():
-        #         # gt_semantic_seg_Nx[0] [1,200,400], gt_masks_4x [#bbox,200,400]
-        #         panoptic_gt = self.mask_matching(gt_semantic_seg_Nx[0], gt_masks_4x)
-        #         panoptic_gt = panoptic_gt.long()
 
-        #     panoptic_loss = F.cross_entropy(panoptic_logits, panoptic_gt, ignore_index = 255)
-        #     pano_loss = {'loss_pano': panoptic_loss * self.train_cfg.loss_pano_weight}
-        #     losses.update(pano_loss)
-
-
-    # ########################### REFERENCE FRAME ##############################
-    # def forward_ref_train(self,
-    #                       x,
-    #                       gt_bboxes=None,
-    #                       gt_labels=None,
-    #                       ):
-    #     # Panoptic head forward ONLY
-    #     fcn_output, fcn_score = self.panopticFPN(x[0:self.panopticFPN.num_levels])
-    #     if gt_bboxes is not None and gt_labels is not None:
-    #         gt_rois = bbox2roi(gt_bboxes) # [#bbox, 5]
-    #         cls_idx = gt_labels[0] # [#bbox] / batch_size must be 1
-    #         # fcn_score # [1,20,200,400]
-    #         # compute mask logits with gt rois
-    #         mask_feats = self.mask_roi_extractor(
-    #                         x[:self.mask_roi_extractor.num_inputs], gt_rois)
-    #                         # [#bbox,256,14,14]
-    #         mask_score = self.mask_head(mask_feats) # [#bbox,#things+1,28,28], #things+1 =9
-    #         nobj,_,H,W = mask_score.shape
-    #         mask_score = mask_score.gather(1, cls_idx.view(-1,1,1,1).expand(-1,-1,H,W)) # [#bbox,1,28,28]
-    #         # compute panoptic FCN logits: in a FCN format !
-    #         mask_logits = self.mask_term(mask_score, gt_rois, cls_idx, fcn_score)
-    #         mask_fcn_logits = self.mask_fcn_term(mask_score, gt_rois, cls_idx, fcn_score)
-    #         panoptic_fcn_logits = fcn_score + mask_fcn_logits
-    #         return fcn_score, mask_logits, panoptic_fcn_logits
-
-    #     return fcn_output, fcn_score
-
-
-    ################################## TEST 
+    #### TEST helpers
 
     def simple_test_bboxes(self,
                            x,
@@ -465,7 +358,6 @@ class PanopticFlowTcea(TwoStageDetector):
         cls_prob = F.softmax(cls_score, dim=1)
         cls_prob, det_rois, cls_idx = self.mask_roi_panoptic(rois,
             bbox_pred, cls_prob, im_info)
-
         det_labels = cls_idx - 1
         det_roi_feats = self.bbox_roi_extractor(
             x[:self.bbox_roi_extractor.num_inputs], det_rois)
@@ -474,6 +366,7 @@ class PanopticFlowTcea(TwoStageDetector):
         if is_panoptic:
             return det_bboxes, det_labels, cls_score, bbox_pred, cls_prob, det_rois, cls_idx
         return det_bboxes, det_labels
+
 
     def simple_test_mask(self,
                          x,
@@ -509,8 +402,6 @@ class PanopticFlowTcea(TwoStageDetector):
         # This has not been handled in base.py ...
         if ref_img is not None:
             ref_img=ref_img[0]
-        # if gt_flow is not None:
-        #     gt_flow=gt_flow[0]
 
         if hasattr(self.test_cfg, 'flownet2'):
             flowR2T, _ = self.compute_flow(
@@ -518,39 +409,11 @@ class PanopticFlowTcea(TwoStageDetector):
         else:
             flowR2T = None
 
-        # ### DEBUG
-        # flow = F.interpolate(flowR2T, scale_factor=4.0, mode='bilinear', align_corners=False) * 4.0
-        # warp_img = self.flow_warping(ref_img, flow)
-        # diff_after = abs(img-warp_img)
-        # diff_before = abs(img-ref_img)
-        # flo = flowR2T.data[0].cpu().numpy().transpose(1,2,0)
-        # vis = vis_flow(flo)
-        # import matplotlib.pyplot as plt
-        # img_ = self.rgb_denormalize(img.data[0].cpu().numpy().transpose(1,2,0)).astype(np.uint8)
-        # ref_img_ = self.rgb_denormalize(ref_img.data[0].cpu().numpy().transpose(1,2,0)).astype(np.uint8)
-        # warp_img_ = self.rgb_denormalize(warp_img.data[0].cpu().numpy().transpose(1,2,0)).astype(np.uint8)
-        # diff_before_ = self.rgb_denormalize(diff_before.data[0].cpu().numpy().transpose(1,2,0)).astype(np.uint8)
-        # diff_after_ = self.rgb_denormalize(diff_after.data[0].cpu().numpy().transpose(1,2,0)).astype(np.uint8)
-        # plt.subplot(241),plt.imshow(img_)
-        # plt.subplot(242),plt.imshow(ref_img_)
-        # plt.subplot(243),plt.imshow(vis)
-        # plt.subplot(244),plt.imshow(warp_img_)
-        # plt.subplot(245),plt.imshow(diff_before_)
-        # plt.subplot(245),plt.imshow(diff_after_)
-        # plt.show()
         """Test without augmentation."""
         assert self.with_bbox, "Bbox head must be implemented."
         x = self.extract_feat(img)
         ref_x = self.extract_feat(ref_img)
-
         x = self.extra_neck(x, ref_x, flowR2T)
-        # flo2 = flow_fine.data[0].cpu().numpy().transpose(1,2,0)
-        # vis2 = vis_flow(flo2)
-        # plt.subplot(246),plt.imshow(vis2)
-        # import matplotlib
-        # matplotlib.use('TkAgg')
-        # plt.show()
-        # pdb.set_trace()
 
         proposal_list = self.simple_test_rpn(
             x, img_meta, self.test_cfg.rpn) if proposals is None else proposals
@@ -615,40 +478,3 @@ class PanopticFlowTcea(TwoStageDetector):
                 
             return bbox_results, segm_results
             
-
-    def aug_test(self, imgs, img_metas, rescale=False,
-                    img_ref=None, gt_flow=None):
-        """Test with augmentations.
-
-        If rescale is False, then returned bboxes and masks will fit the scale
-        of imgs[0].
-        """
-        # recompute feats to save memory
-        proposal_list = self.aug_test_rpn(
-            self.extract_feats(imgs, img_ref=img_ref, gt_flow=gt_flow), 
-                    img_metas, self.test_cfg.rpn)
-        det_bboxes, det_labels = self.aug_test_bboxes(
-            self.extract_feats(imgs, img_ref=img_ref, gt_flow=gt_flow),
-                    img_metas, proposal_list, self.test_cfg.rcnn)
-
-        if rescale:
-            _det_bboxes = det_bboxes
-        else:
-            _det_bboxes = det_bboxes.clone()
-            _det_bboxes[:, :4] *= img_metas[0][0]['scale_factor']
-        bbox_results = bbox2result(_det_bboxes, det_labels,
-                                   self.bbox_head.num_classes)
-
-        # det_bboxes always keep the original scale
-        if self.with_mask:
-            segm_results = self.aug_test_mask(
-                self.extract_feats(imgs, img_ref=img_ref, gt_flow=gt_flow), 
-                    img_metas, det_bboxes, det_labels)
-            # test with panoptic segm
-            if hasattr(self, 'panopticFPN') and self.panopticFPN is not None:
-                semantic_results = self.aug_test_semantic_segm(self.extract_feats(imgs), img_metas)
-                return bbox_results, segm_results, semantic_results
-
-            return bbox_results, segm_results
-        else:
-            return bbox_results

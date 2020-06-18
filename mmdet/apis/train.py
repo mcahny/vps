@@ -187,13 +187,6 @@ def _dist_train(model, dataset, cfg, validate=False):
     elif cfg.load_from:
         runner.load_checkpoint(cfg.load_from)
 
-    # for name, param in runner.model.named_parameters():
-    #     if 'extra_neck' not in name:
-    #         param.requires_grad = False
-    # for name, param in runner.model.named_parameters():
-    #     if param.requires_grad:
-    #         print('Learnable:',name)
-
     runner.run(data_loaders, cfg.workflow, cfg.total_epochs)
 
 
@@ -201,39 +194,6 @@ def _non_dist_train(model, dataset, cfg, validate=False):
     # prepare data loaders
     dataset = dataset if isinstance(dataset, (list, tuple)) else [dataset]
     
-    # DEBUG ------
-    # for i in range(1,1000,10):
-    #     dbg = dataset[0].dataset.prepare_train_img(i)
-    #     pdb.set_trace()
-        # dbg = dataset[0].dataset.getitem(i)
-        # pdb.set_trace()
-
-    # import matplotlib.pyplot as plt
-    # import numpy as np
-    # def normalize(img):
-    #     return (img-img.min())/(img.max()-img.min())
-    # for i in range(1,1000,10):
-    #     dbg = dataset[0].dataset.getitem(i)
-    #     pdb.set_trace()
-    #     img = normalize(dbg['img'].data.cpu().numpy().transpose(1,2,0))
-    #     ref_img = normalize(dbg['ref_img'].data.cpu().numpy().transpose(1,2,0))
-    #     print(dbg['gt_obj_ids'])
-    #     print(dbg['ref_obj_ids'])
-    #     print(dbg['gt_pids'])
-    #     plt.subplot(221),plt.imshow(img)
-    #     plt.subplot(222),plt.imshow(ref_img)
-
-    #     mask = np.zeros_like(img[:,:,0])
-    #     for oid, m in zip(dbg['gt_obj_ids'].data, dbg['gt_masks'].data):
-    #         mask[m==1] = oid+1
-    #     ref_mask = np.zeros_like(img[:,:,0])
-    #     for oid, m in zip(dbg['ref_obj_ids'].data, dbg['ref_masks'].data):
-    #         ref_mask[m==1] = oid+1
-    #     plt.subplot(223),plt.imshow(mask)
-    #     plt.subplot(224),plt.imshow(ref_mask)
-    #     plt.show()
-    #     pdb.set_trace()
-
     data_loaders = [
         build_dataloader(
             ds,

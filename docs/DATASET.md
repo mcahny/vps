@@ -10,21 +10,32 @@ b. Download `leftImg8bit_sequence.zip` and `gtFine.zip` from the [Cityscapes-dat
 
 c. Download Cityscapes-VPS from here in `$CITY_VPS` folder.
 
-### Merge Cityscapes and Cityscapes-VPS datasets
-Fetch cityscapes sequence images into `$CITY_VPS/SPLIT/img_all` and merge two datasets at `$CITY_VPS/SPLIT/cls` and `$CITY_VPS/SPLIT/inst`.
+### Merge Cityscapes into Cityscapes-VPS
+We have 2400/600/600 frames for train/val/test splits. Fetch cityscapes sequence images into `$CITY_VPS/SPLIT/img` and `$CITY_VPS/SPLIT/img_all`, and merge two datasets labels at `$CITY_VPS/SPLIT/cls` and `$CITY_VPS/SPLIT/inst`.
 ```
-# SPLIT = 'val' or 'test'
-python prepare_city_vps/fetch_city_images.py --src_dir data/leftImg8bit_sequence/val/ \
+bash ./prepare_data/merge_datasets.sh \
+    data/cityscapes_vps \
+    data/leftImg8bit_sequence/val/ \
+    data/gtFine/val/
+# OR
+# For SPLIT = 'train'/'val'/'test'
+python prepare_data/fetch_city_images.py \
+    --src_dir data/leftImg8bit_sequence/val/ \
     --dst_dir $CITY_VPS --mode SPLIT 
-python prepare_city_vps/merge_datasets.py --src_dir data/gtFine/val/ \
+python prepare_data/merge_datasets.py \
+    --src_dir data/gtFine/val/ \
     --dst_dir $CITY_VPS --mode SPLIT
 ```
 
-### Create panoptic labels
+### Create video-panoptic labels
 Create `labelmap/`, `panoptic_inst/`, and `panoptic_video/` in `$CITY_VPS/SPLIT/` by running following commands.
 ```
-python prepare_city_vps/create_panoptic_labels.py --root_dir $CITY_VPS --mode SPLIT
-python prepare_city_vps/create_panoptic_video_labels.py --root_dir $CITY_VPS --mode SPLIT
+bash ./prepare_data/create_panoptic_labels.sh \
+    data/cityscapes_vps/
+# OR
+# For SPLIT = 'train'/'val'
+python prepare_data/create_panoptic_labels.py --root_dir $CITY_VPS --mode SPLIT
+python prepare_data/create_panoptic_video_labels.py --root_dir $CITY_VPS --mode SPLIT
 ```
 
 ### Directory Structure

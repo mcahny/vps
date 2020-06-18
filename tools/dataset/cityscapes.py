@@ -1,5 +1,6 @@
-# -------------------------------------------------------------------
-# Modified from the evaluation code in Unified Panoptic Segmentation Network https://github.com/uber-research/UPSNet
+# ------------------------------------------------------------------
+# Modified from the Unified Panoptic Segmentation Network 
+# (https://github.com/uber-research/UPSNet)
 # ------------------------------------------------------------------
 
 from __future__ import print_function

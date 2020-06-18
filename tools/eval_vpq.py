@@ -311,6 +311,7 @@ def main():
     start_time = time.time()
     vpq_all, vpq_thing, vpq_stuff = [], [], []
 
+    # for k in [0,5,10,15] --> num_frames_w_gt [1,2,3,4]
     for nframes in [1,2,3,4]:
         gt_pred_split_ = copy.deepcopy(gt_pred_split)
         vpq_all_, vpq_thing_, vpq_stuff_ = vpq_compute(

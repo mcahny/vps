@@ -92,7 +92,7 @@ def sem_inst2pan(sem_file, inst_file, id_converter, ori2fcn):
 
     return pan_map.astype(np.uint32), label_map.astype(np.uint8)
 
-def panoptic_multi_core(sem_files, inst_files, id_converter, oridfcn):
+def panoptic_multi_core(sem_files, inst_files, id_converter, ori2fcn):
     cpu_num = multiprocessing.cpu_count()//2
     sem_split = np.array_split(list(sem_files), cpu_num)
     inst_split = np.array_split(list(inst_files), cpu_num)
@@ -104,7 +104,7 @@ def panoptic_multi_core(sem_files, inst_files, id_converter, oridfcn):
 
     for proc_id, (sem_part, inst_part) in enumerate(zip(sem_split, inst_split)):
         workers.apply_async(panoptic_single_core,
-                          (proc_id, sem_part, inst_part, id_converter, ori2fcn))
+                (proc_id, sem_part, inst_part, id_converter, ori2fcn))
     workers.close()
     workers.join()
 

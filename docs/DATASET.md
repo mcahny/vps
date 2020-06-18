@@ -6,17 +6,17 @@ This software is for non-commercial use only. The source code is released under 
 ### Download datasets
 a. Symlink the `$DATA_ROOT` dataset to `$MMDETECTION/data` folder. 
 
-b. Download `leftImg8bit_sequence.zip` and `gtFine.zip` from the [Cityscapes-dataset webpage](https://cityscpaes-dataset.com/) in the `data` folder. You need only `val/` of these datasets to construct Cityscapes-VPS.
+b. Download Cityscapes-VPS from here in `$CITY_VPS` folder.
 
-c. Download Cityscapes-VPS from here in `$CITY_VPS` folder.
+c. Download `leftImg8bit_sequence.zip` and `gtFine.zip` from the [Cityscapes-dataset webpage](https://cityscpaes-dataset.com/) in the `data` folder. You need only `val/` of these datasets to construct Cityscapes-VPS.
+
+
 
 ### Merge Cityscapes into Cityscapes-VPS
 We have 2400/600/600 frames for train/val/test splits. Fetch cityscapes sequence images into `$CITY_VPS/SPLIT/img` and `$CITY_VPS/SPLIT/img_all`, and merge two datasets labels at `$CITY_VPS/SPLIT/cls` and `$CITY_VPS/SPLIT/inst`.
 ```
 bash ./prepare_data/merge_datasets.sh \
-    data/cityscapes_vps \
-    data/leftImg8bit_sequence/val/ \
-    data/gtFine/val/
+    data/cityscapes_vps  data/leftImg8bit_sequence/val/  data/gtFine/val/
 # OR
 # For SPLIT = 'train'/'val'/'test'
 python prepare_data/fetch_city_images.py \
@@ -35,6 +35,7 @@ bash ./prepare_data/create_panoptic_labels.sh \
 # OR
 # For SPLIT = 'train'/'val'
 python prepare_data/create_panoptic_labels.py --root_dir $CITY_VPS --mode SPLIT
+# For SPLIT = 'val'
 python prepare_data/create_panoptic_video_labels.py --root_dir $CITY_VPS --mode SPLIT
 ```
 

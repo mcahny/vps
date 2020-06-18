@@ -24,7 +24,7 @@ Image-level baseline (left) / **VPSNet** result (right)
 This repo is tested under Python 3.7, PyTorch 1.4, Cuda 10.0, and mmcv==0.2.14.
 
 ## Installation
-a. This repo is built based on [mmdetection](https://github.com/open-mmlab/mmdetection) commit hash `4357697`. Modified files are listed [here](mmdet/readme.txt). Please refer to [INSTALL.md](docs/INSTALL.md) to install the library.
+a. This repo is built based on [mmdetection](https://github.com/open-mmlab/mmdetection) commit hash `4357697`. Our modifications for VPSNet implementation are listed [here](mmdet/readme.txt). Please refer to [INSTALL.md](docs/INSTALL.md) to install the library.
 You can use following commands to create conda env with related dependencies.
 ```
 conda create -n vps python=3.7 -y
@@ -34,7 +34,6 @@ pip install -r requirements.txt
 pip install "git+https://github.com/cocodataset/cocoapi.git#subdirectory=PythonAPI"
 pip install "git+https://github.com/cocodataset/panopticapi.git"
 pip install -v -e . 
-
 ```
 b. You also need to install dependencies for [Flownet2](https://github.com/NVIDIA/flownet2-pytorch) and [UPSNet](https://github.com/uber-research/UPSNet) modules. 
 ```
@@ -42,8 +41,9 @@ bash ./init_flownet.sh
 bash ./init_upsnet.sh
 ```
 
-c. You may also need to download some pretrained weights.
+c. You may also need to download some pretrained weights [here].
 ```
+pip install gdown
 bash ./download_weights.sh
 ```
 
@@ -80,7 +80,7 @@ mmdetection
 │   │   ├── test
 │   │   │   ├── img_all
 ```
-Directory structure for the Cityscapes image panoptic segmentation (IPS) is as follows.
+Directory structure for the Cityscapes image panoptic segmentation (IPS). Details for the preparation will be posted soon.
 ```
 │   ├── cityscapes
 │   │   ├── annotations
@@ -127,7 +127,7 @@ python tools/test_vpq.py configs/cityscapes/fusetrack.py \
 ```
 Files containing the predicted results will be generated as `pred.json` and `pan_pred/*.png` at  `work_dirs/cityscapes_vps/fusetrack_vpct/test_pans_unified/`. 
 
-Cityscapes-VPS `test` split currently only allows evaluation on the codalab server. Please upload `submission.zip` to codalab server to see actual performances.
+Cityscapes-VPS `test` split currently only allows evaluation on the codalab server. Please upload `submission.zip` to codalab server (will be open soon) to see actual performances.
 ```
 submission.zip
 ├── pred.json

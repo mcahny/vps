@@ -122,7 +122,7 @@ submission.zip
 * Train FuseTrack model on video-level Cityscapes-VPS. We start from [initial weights](https://drive.google.com/uc?id=1t69I1u0QKl-N4eciYv3UYXFOQSYb25cD) of image panoptic segmentation (IPS) model, pretrained on the original Cityscapes. Place it `work_dirs/cityscapes/fuse_vpct/` and rename to `latest.pth` and run the following command.
 ```
 # Multi-GPU distributed training
-bash ./tools/dist_train.sh configs/cityscapes/fusetrack.py ${GPU_NUM} --load
+bash ./tools/dist_train.sh configs/cityscapes/fusetrack.py ${GPU_NUM}
 # OR
 python ./tools/train.py configs/cityscapes/fusetrack.py --gpus ${GPU_NUM}
 ```

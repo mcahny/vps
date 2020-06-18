@@ -48,7 +48,7 @@ bash ./download_weights.sh
 ```
 
 ## Dataset
-You can download Cityscapes-VPS [here](https://www.dropbox.com/s/ecem4kq0fdkver4/cityscapes-vps-dataset-1.0.zip?dl=0). It provides 2500-frame panoptic labels that temporally extend the 500 Cityscapes image-panoptic labels. Total 3000-frame panoptic labels correspond to 5, 10, 15, 20, 25, and 30th frames of each 500 videos, where all instance ids are associated over time.
+You can [download Cityscapes-VPS here](https://www.dropbox.com/s/ecem4kq0fdkver4/cityscapes-vps-dataset-1.0.zip?dl=0). It provides 2500-frame panoptic labels that temporally extend the 500 Cityscapes image-panoptic labels. There are total 3000-frame panoptic labels which correspond to 5, 10, 15, 20, 25, and 30th frames of each 500 videos, where all instance ids are associated over time.
 <img src="./image/dataset.png" width="1000"> 
 
 It not only supports video panoptic segmentation (VPS) task, but also provides super-set annotations for video semantic segmentation (VSS) and video instance segmentation (VIS) tasks. 

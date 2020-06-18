@@ -41,7 +41,7 @@ bash ./init_flownet.sh
 bash ./init_upsnet.sh
 ```
 
-c. You may also need to download some pretrained weights [here].
+c. You may also need to download some pretrained weights.
 ```
 pip install gdown
 bash ./download_weights.sh

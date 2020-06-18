@@ -121,7 +121,10 @@ submission.zip
 ## Training
 * Train FuseTrack model on video-level Cityscapes-VPS.
 ```
+# Multi-GPU distributed training
 bash ./tools/dist_train.sh configs/cityscapes/fusetrack.py ${GPU_NUM}
+# OR
+python ./tools/train.py configs/cityscapes/fusetrack.py --gpus ${GPU_NUM}
 ```
 
 

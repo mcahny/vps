@@ -82,7 +82,7 @@ mmdetection
 ```
 
 ## Testing
-Our trained models are available for download at Google Drive. Run the following command to test the model on Cityscapes and Cityscapes-VPS.
+Our trained models are available for download [here](https://drive.google.com/uc?id=1KcHYnghbs2KC6hQc7QVkPkEiJMrLr73s). Rename it to `latest.pth` and run the following commands to test the model on Cityscapes-VPS.
 
 * FuseTrack model for Video Panoptic Quality (VPQ) on Cityscapes-VPS `val` set (`vpq-λ.txt` will be saved.)
 ```
@@ -119,7 +119,7 @@ submission.zip
 
 
 ## Training
-* Train FuseTrack model on video-level Cityscapes-VPS.
+* Train FuseTrack model on video-level Cityscapes-VPS. We start from [initial weights](https://drive.google.com/uc?id=1t69I1u0QKl-N4eciYv3UYXFOQSYb25cD) of image panoptic segmentation (IPS) model, pretrained on the original Cityscapes. Rename it to `latest.pth` and run the following command.
 ```
 # Multi-GPU distributed training
 bash ./tools/dist_train.sh configs/cityscapes/fusetrack.py ${GPU_NUM}

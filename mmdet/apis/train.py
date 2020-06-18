@@ -12,8 +12,7 @@ from mmdet.core import (CocoDistEvalmAPHook, CocoDistEvalRecallHook,
 from mmdet.datasets import DATASETS, build_dataloader
 from mmdet.models import RPN
 from .env import get_root_logger
-from mmdet.datasets.pipelines.flow_utils import vis_flow
-import pdb
+
 
 def parse_losses(losses):
     log_vars = OrderedDict()
@@ -22,11 +21,12 @@ def parse_losses(losses):
             log_vars[loss_name] = loss_value.mean()
         elif isinstance(loss_value, list):
             log_vars[loss_name] = sum(_loss.mean() for _loss in loss_value)
+        elif loss_value == 0:
+            # print('match_loss: 0')
+            pass
         else:
-            print('{} is not a tensor or list of tensors'.format(loss_name))
-            print(loss_value)
-            # raise TypeError(
-            #     '{} is not a tensor or list of tensors'.format(loss_name))
+            raise TypeError(
+                '{} is not a tensor or list of tensors'.format(loss_name))
 
     loss = sum(_value for _key, _value in log_vars.items() if 'loss' in _key)
 

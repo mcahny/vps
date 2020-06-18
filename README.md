@@ -29,7 +29,7 @@ You can use following commands to create conda env with related dependencies.
 ```
 conda create -n vps python=3.7 -y
 conda activate vps
-conda install -c pytorch pytorch=1.4 torchvision -y
+conda install pytorch=1.4 torchvision cudatoolkit=10.0 -c pytorch -y
 pip install -r requirements.txt
 pip install "git+https://github.com/cocodataset/cocoapi.git#subdirectory=PythonAPI"
 pip install "git+https://github.com/cocodataset/panopticapi.git"
@@ -80,44 +80,23 @@ mmdetection
 │   │   ├── test
 │   │   │   ├── img_all
 ```
-Directory structure for the Cityscapes image panoptic segmentation (IPS). Details for the preparation will be posted soon.
-```
-│   ├── cityscapes
-│   │   ├── annotations
-│   │   │   ├── instancesonly_gtFine_train.json
-│   │   │   ├── instancesonly_pano_gtFine_val.json
-│   │   │   ├── cityscapes_fine_val.json
-│   │   ├── panoptic
-│   │   ├── train
-│   │   ├── train_nbr
-│   │   ├── labels
-│   │   ├── val
-│   │   ├── val_nbr
-```
+
 ## Testing
 Our trained models are available for download at Google Drive. Run the following command to test the model on Cityscapes and Cityscapes-VPS.
 
-* Image Panoptic Quality on Cityscapes `val` set (`pq.txt` will be saved.)
-```
-python tools/test_eval_ipq.py \
-  configs/cityscapes/fuse.py \
-  work_dirs/cityscapes/fuse_vpct/latest.pth \
-  --out work_dirs/cityscapes/fuse_vpct/val.pkl \
-  --dataset Cityscapes
-```
-* Video Panoptic Quality (VPQ) on Cityscapes-VPS `val` set (`vpq-λ.txt` will be saved.)
+* FuseTrack model for Video Panoptic Quality (VPQ) on Cityscapes-VPS `val` set (`vpq-λ.txt` will be saved.)
 ```
 python tools/test_vpq.py configs/cityscapes/fusetrack.py \
   work_dirs/cityscapes_vps/fusetrack_vpct/latest.pth \
   --out work_dirs/cityscapes_vps/fusetrack_vpct/val.pkl \
-  --dataset CityscapesVps --has_track --n_video 50 \
-  --pan_im_json_file data/cityscapes_vps/panoptic_im_val_city_vps.json
+  --pan_im_json_file data/cityscapes_vps/panoptic_im_val_city_vps.json \
+  --n_video 50 \
 python tools/eval_vpq.py \
   --submit_dir work_dirs/cityscapes_vps/fusetrack_vpct/val_pans_unified/ \
   --truth_dir data/cityscapes_vps/val/panoptic_video/ \
   --pan_gt_json_file data/cityscapes_vps/panoptic_gt_val_city_vps.json
 ```
-* VPS inference on Cityscapes-VPS `test` set
+* FuseTrack model VPS inference on Cityscapes-VPS `test` set
 ```
 python tools/test_vpq.py configs/cityscapes/fusetrack.py \
   work_dirs/cityscapes_vps/fusetrack_vpct/latest.pth \
@@ -140,10 +119,6 @@ submission.zip
 
 
 ## Training
-* Train Fuse model on image-level Cityscapes.
-```
-bash ./tools/dist_train.sh configs/cityscapes/fuse.py ${GPU_NUM}
-```
 * Train FuseTrack model on video-level Cityscapes-VPS.
 ```
 bash ./tools/dist_train.sh configs/cityscapes/fusetrack.py ${GPU_NUM}

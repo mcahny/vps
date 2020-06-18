@@ -75,15 +75,15 @@ def parse_args():
     parser.add_argument('config', help='test config file path')
     parser.add_argument('checkpoint', help='checkpoint file')
     parser.add_argument('--out', help='output result file')
-    parser.add_argument('--load', action='store_true')
+    parser.add_argument('--load', help='when .pkl files are saved', 
+        action='store_true')
     parser.add_argument('--gpus', type=str, default='0' )
     parser.add_argument('--dataset', type=str, default='CityscapesExt')
     parser.add_argument('--test_config', type=str, 
         default='configs/cityscapes/test_cityscapes_1gpu.yaml')
     # ---- VPQ - specific arguments
-    parser.add_argument('--has_track', action='store_true')
     parser.add_argument('--n_video', type=int, default=50)
-    parser.add_argument('--pan_im_json_file', type=str, default='data/city_ext/panoptic_gt_test_city_vps.json')
+    parser.add_argument('--pan_im_json_file', type=str, default='data/cityscapes_vps/panoptic_im_val_city_vps.json')
     args, rest = parser.parse_known_args()
     update_config(args.test_config)
     args = parser.parse_args()

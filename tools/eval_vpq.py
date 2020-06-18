@@ -321,7 +321,7 @@ def main():
         vpq_thing.append(vpq_thing_)
         vpq_stuff.append(vpq_stuff_)
 
-    output_filename = os.path.join(output_dir, 'scores.txt')
+    output_filename = os.path.join(output_dir, 'vpq-final.txt')
     output_file = open(output_filename, 'w')
     output_file.write("vpq_all:%.4f\n"%(sum(vpq_all)/len(vpq_all)))
     output_file.write("vpq_thing:%.4f\n"%(sum(vpq_thing)/len(vpq_thing)))

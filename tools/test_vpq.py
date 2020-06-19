@@ -78,7 +78,7 @@ def parse_args():
     parser.add_argument('--load', help='when .pkl files are saved', 
         action='store_true')
     parser.add_argument('--gpus', type=str, default='0' )
-    parser.add_argument('--dataset', type=str, default='CityscapesExt')
+    parser.add_argument('--dataset', type=str, default='CityscapesVps')
     parser.add_argument('--test_config', type=str, 
         default='configs/cityscapes/test_cityscapes_1gpu.yaml')
     # ---- VPQ - specific arguments

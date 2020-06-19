@@ -1,6 +1,6 @@
 # model settings
 model = dict(
-    type='PanopticFuseTrack',
+    type='PanopticTrack',
     pretrained='modelzoo://resnet50',
     backbone=dict(
         type='ResNet',
@@ -14,14 +14,6 @@ model = dict(
         in_channels=[256, 512, 1024, 2048],
         out_channels=256,
         num_outs=5),
-    extra_neck=dict(
-        type='BFPTcea',
-        in_channels=256,
-        num_levels=5,
-        refine_level=0,
-        refine_type='conv',
-        center=0,
-        nframes=2),
     panoptic = dict(
             type='UPSNetFPN',
             in_channels=256,
@@ -126,8 +118,6 @@ train_cfg = dict(
         pos_weight=-1,
         debug=False),
     loss_pano_weight=0.5,
-    flownet2=[],
-    # Cityscapes specific class mapping
     class_mapping = {1:11, 2:12, 3:13, 4:14, 5:15, 6:16, 7:17, 8:18})
 test_cfg = dict(
     rpn=dict(
@@ -143,19 +133,16 @@ test_cfg = dict(
         max_per_img=100,
         mask_thr_binary=0.5),
     loss_pano_weight=None,
-    flownet2=[],
-    # Cityscapes specific class mapping
     class_mapping = {1:11, 2:12, 3:13, 4:14, 5:15, 6:16, 7:17, 8:18})
 # dataset settings
-# dataset_type = 'CityscapesVideoOfsDataset'
 dataset_type = 'CityscapesVPSDataset'
-data_root = 'data/cityscapes_vps/'
+data_root = '../../data/cityscapes_vps/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
     dict(type='LoadRefImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True, 
-        with_seg=True, with_pid=True,
+        with_seg=True, with_flow=False, with_pid=True,
         # Cityscapes specific class mapping
         semantic2label={0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, 9:9,
                         10:10, 11:11, 12:12, 13:13, 14:14, 15:15, 16:16,
@@ -170,12 +157,19 @@ train_pipeline = [
     dict(type='DefaultFormatBundle'),
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 
             'gt_obj_ids', 'gt_masks', 'gt_semantic_seg', 
-            'gt_semantic_seg_Nx', 'ref_img', 'ref_bboxes', 
-            'ref_labels', 'ref_obj_ids', 'ref_masks']),
+            'gt_semantic_seg_Nx','ref_img', 'ref_bboxes', 
+            'ref_labels', 'ref_obj_ids', 'ref_masks', 
+            'ref_semantic_seg', 'ref_semantic_seg_Nx']),
 ]
 test_pipeline = [
     dict(type='LoadRefImageFromFile'),
-
+    # dict(type='Resize', img_scale=[(2048, 1024)], keep_ratio=True,
+    #     multiscale_mode='value'),
+    # dict(type='RandomFlip', flip_ratio=0),
+    # dict(type='Normalize', **img_norm_cfg),
+    # dict(type='Pad', size_divisor=32),
+    # dict(type='ImageToTensor', keys=['img']),
+    # dict(type='Collect', keys=['img']),
     dict(
         type='MultiScaleFlipAug',
         img_scale=[(2048, 1024)],
@@ -244,12 +238,12 @@ log_config = dict(
 total_epochs = 12
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-
-work_dir = './work_dirs/cityscapes_vps/fusetrack_vpct'
-load_from = './work_dirs/cityscapes/fuse_vpct/latest.pth'
+work_dir = './work_dirs/cityscapes_vps/track_vpct'
+# load_from = './work_dirs/panopticFPN_coco/latest.pth'
+# load_from = './work_dirs/cityscapes/ups_cococity_512x2/latest.pth'
+# load_from = './work_dirs/cityscapes/ups_pano_coco/latest.pth'
+load_from = './work_dirs/viper/track/latest.pth'
+# load_from = None
+# resume_from = './work_dirs/cityscapes/ups_async_cococity_512x2/latest.pth'
 resume_from = None
 workflow = [('train', 1)]
-
-
-
-

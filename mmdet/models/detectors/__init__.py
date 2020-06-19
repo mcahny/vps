@@ -16,6 +16,7 @@ from .single_stage import SingleStageDetector
 from .two_stage import TwoStageDetector
 from .panoptic_fuse import PanopticFuse
 from .panoptic_fusetrack import PanopticFuseTrack
+from .panoptic_track import PanopticTrack
 
 
 __all__ = [
@@ -24,5 +25,6 @@ __all__ = [
     'HybridTaskCascade', 'DoubleHeadRCNN', 'RetinaNet', 'FCOS', 
     'GridRCNN', 'MaskScoringRCNN', 'RepPointsDetector', 
 
-    'TwoStageDetector', 'PanopticFuse', 'PanopticFuseTrack',  
+    'TwoStageDetector', 'PanopticFuse', 'PanopticFuseTrack', 
+    'PanopticTrack', 
 ]

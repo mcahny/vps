@@ -16,7 +16,7 @@ from ..utils.mask_roi import MaskROI
 # flow modules
 from ..flow_modules import FlowNet2
 from ..flow_modules.resample2d_package.resample2d import Resample2d
-from ..utils.flow_utils import denormalize, rgb_denormalize, vis_flow
+from ..utils.flow_utils import denormalize
 
 import numpy as np
 import mmcv
@@ -99,7 +99,7 @@ class PanopticFuseTrack(TwoStageDetector):
             self.flownet2 = FlowNet2(flow2_args, requires_grad=False)
             model_filename = osp.join(os.getcwd(), 'work_dirs',
                 'flownet', 'FlowNet2_checkpoint.pth.tar')
-            print("==> Inside PanopticTrackFlowTcea (Device ID: %d)"%(
+            print("==> Inside PanopticFuseTrack (Device ID: %d)"%(
                   torch.cuda.current_device()))
             print("--- Load flow module: %s"%model_filename)
             checkpoint = torch.load(model_filename)
@@ -158,8 +158,6 @@ class PanopticFuseTrack(TwoStageDetector):
                       ref_bboxes=None, # gt bbox of reference frame
                       ref_labels=None,
                       ref_masks=None,
-                      ref_semantic_seg=None,
-                      ref_semantic_seg_Nx=None,
                       ref_obj_ids=None,
                       gt_pids=None, # gt ids of target objs mapped to reference objs
                       gt_obj_ids=None,
@@ -508,8 +506,6 @@ class PanopticFuseTrack(TwoStageDetector):
         # This has not been handled in base.py ...
         if ref_img is not None:
             ref_img=ref_img[0]
-        # if gt_flow is not None:
-        #     gt_flow=gt_flow[0]
 
         # ********************************
         # Initial Flow and Feature Warping

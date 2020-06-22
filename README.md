@@ -80,7 +80,7 @@ mmdetection
 ```
 
 ## Evaluation Metric 
-<img src="./image/vpq_metric.png" width="800"> 
+<img src="./image/vpq_measure.png" width="800"> 
 
 
 ## Testing

@@ -5,17 +5,9 @@
 
 [Dahun Kim](https://mcahny.github.io/), [Sanghyun Woo](https://sites.google.com/view/sanghyunwoo/), [Joon-Young Lee](https://joonyoung-cv.github.io/), and [In So Kweon](https://rcv.kaist.ac.kr).
 
-```bibtex
-@inproceedings{kim2020vps,
-  title={Video Panoptic Segmentation},
-  author={Dahun Kim and Sanghyun Woo and Joon-Young Lee and In So Kweon},
-  booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition},
-  year={2020}
-}
-```
 
-<img src="./image/panoptic_pair_240.gif" width="800"> 
-
+<img src="./image/landscape.png" width="800"> <br/>
+<img src="./image/panoptic_pair_240.gif" width="800"> <br/>
 Image-level baseline (left) / **VPSNet** result (right)
 
 ## Disclaimer

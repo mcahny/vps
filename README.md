@@ -147,6 +147,15 @@ This software is for non-commercial use only.
 The source code is released under the Attribution-NonCommercial-ShareAlike (CC BY-NC-SA) Licence
 (see [this](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode) for details)
 
+
+## Acknowledgements
+This project has used utility functions from other wonderful open-sourced libraries. We would especially thank the authors of:
+* [mmdetection](https://github.com/open-mmlab/mmdetection)
+* [UPSNet](https://gitub.com/uber-research/UPSNet)
+* [FlowNet2](https://NVIDIA/flownet2-pytorch)
+
+
+
 ## Contact
 
 If you have any questions regarding the repo, please contact Dahun Kim (mcahny01@gmail.com) or create an issue.

@@ -5,8 +5,8 @@
 Official pytorch implementation for "Video Panoptic Segmentation" (CVPR 2020 Oral)
 
 [Dahun Kim](https://mcahny.github.io/), [Sanghyun Woo](https://sites.google.com/view/sanghyunwoo/), [Joon-Young Lee](https://joonyoung-cv.github.io/), and [In So Kweon](https://rcv.kaist.ac.kr).
-[[Paper](https://drive.google.com/file/d/1jJkwTMFRNEx-ka9u1GZastLxctqOwN8t)] 
-[[Dataset](https://www.dropbox.com/s/ecem4kq0fdkver4/cityscapes-vps-dataset-1.0.zip?dl=0)]
+
+### [[Paper](https://drive.google.com/file/d/1jJkwTMFRNEx-ka9u1GZastLxctqOwN8t)] [[Dataset](https://www.dropbox.com/s/ecem4kq0fdkver4/cityscapes-vps-dataset-1.0.zip?dl=0)]
 [[Project](https://sites.google.com/view/video-panoptic)] 
 [Video results]
 

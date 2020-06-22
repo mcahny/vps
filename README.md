@@ -6,9 +6,8 @@ Official pytorch implementation for "Video Panoptic Segmentation" (CVPR 2020 Ora
 
 [Dahun Kim](https://mcahny.github.io/), [Sanghyun Woo](https://sites.google.com/view/sanghyunwoo/), [Joon-Young Lee](https://joonyoung-cv.github.io/), and [In So Kweon](https://rcv.kaist.ac.kr).
 
-### [[Paper](https://drive.google.com/file/d/1jJkwTMFRNEx-ka9u1GZastLxctqOwN8t)] [[Dataset](https://www.dropbox.com/s/ecem4kq0fdkver4/cityscapes-vps-dataset-1.0.zip?dl=0)]
-[[Project](https://sites.google.com/view/video-panoptic)] 
-[Video results]
+### [[Paper](https://drive.google.com/file/d/1jJkwTMFRNEx-ka9u1GZastLxctqOwN8t)] [[Dataset](https://www.dropbox.com/s/ecem4kq0fdkver4/cityscapes-vps-dataset-1.0.zip?dl=0)] [[Project](https://sites.google.com/view/video-panoptic)] 
+
 
 ```bibtex
 @inproceedings{kim2020vps,
@@ -83,6 +82,10 @@ mmdetection
 │   │   ├── test
 │   │   │   ├── img_all
 ```
+
+## Evaluation Metric 
+<img src="./image/vpq_metric.png" width="800"> 
+
 
 ## Testing
 Our trained models are available for download [here](https://drive.google.com/uc?id=1KcHYnghbs2KC6hQc7QVkPkEiJMrLr73s). Rename it to `latest.pth` and run the following commands to test the model on Cityscapes-VPS.

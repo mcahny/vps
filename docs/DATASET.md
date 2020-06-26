@@ -1,7 +1,7 @@
 ## Dataset
 
 ### Disclaimer
-This software is for non-commercial use only. The source code is released under the Attribution-NonCommercial-ShareAlike (CC BY-NC-SA) Licence. Permission is granted to use the data given that you agree to both [our license terms](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode) and that of the original [Cityscapes-dataset](https://cityscpaes-dataset.com/license/)
+This software is for non-commercial use only. The source code is released under the Attribution-NonCommercial-ShareAlike (CC BY-NC-SA) Licence. Permission is granted to use the data given that you agree to both [our license terms](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode) and that of the original [Cityscapes-dataset](https://cityscapes-dataset.com/license/)
 
 ### Download datasets
 a. Symlink the `$DATA_ROOT` dataset to `$MMDETECTION/data` folder. 

@@ -8,7 +8,7 @@ a. Symlink the `$DATA_ROOT` dataset to `$MMDETECTION/data` folder.
 
 b. Download [Cityscapes-VPS here](https://www.dropbox.com/s/ecem4kq0fdkver4/cityscapes-vps-dataset-1.0.zip?dl=0) in `$CITY_VPS = data/cityscapes_vps/` folder.
 
-c. Download `leftImg8bit_sequence.zip` and `gtFine.zip` from the [Cityscapes-dataset webpage](https://cityscpaes-dataset.com/) in `data` folder. You need only `val/` of these datasets to construct Cityscapes-VPS.
+c. Download `leftImg8bit_sequence.zip` and `gtFine.zip` from the [Cityscapes-dataset webpage](https://cityscapes-dataset.com/) in `data` folder. You need only `val/` of these datasets to construct Cityscapes-VPS.
 
 
 ### Merge Cityscapes into Cityscapes-VPS

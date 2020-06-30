@@ -1,5 +1,6 @@
 # ------------------------------------------------------------------
-# Modified from the Unified Panoptic Segmentation Network 
+# Modified from:
+#  Unified Panoptic Segmentation Network 
 # (https://github.com/uber-research/UPSNet)
 # ------------------------------------------------------------------
 

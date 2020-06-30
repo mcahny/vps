@@ -1,31 +1,8 @@
-# ---------------------------------------------------------------------------
-# Unified Panoptic Segmentation Network
-#
-# Modifications Copyright (c) 2019 Uber Technologies, Inc.
-# ---------------------------------------------------------------------------
-# Based on:
-# ---------------------------------------------------------------------------
-# Detectron
-# Copyright (c) 2017-present, Facebook, Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ---------------------------------------------------------------------------
-
-"""Representation of the standard COCO json dataset format.
-When working with a new dataset, we strongly suggest to convert the dataset into
-the COCO json format and use the existing code; it is not recommended to write
-code to support new dataset formats.
-"""
+# ------------------------------------------------------------------
+# Modified from:
+#  Unified Panoptic Segmentation Network 
+# (https://github.com/uber-research/UPSNet)
+# ------------------------------------------------------------------
 
 from __future__ import absolute_import
 from __future__ import division
@@ -38,23 +15,9 @@ import numpy as np
 import os
 import scipy.sparse
 
-# Must happen before importing COCO API (which imports matplotlib)
-"""Set matplotlib up."""
-# import matplotlib
-# # Use a non-interactive backend
-# matplotlib.use('Agg')
-# COCO API
 from pycocotools import mask as COCOmask
 from pycocotools.coco import COCO
-
 from tools.config.config import config
-
-# from lib.utils.timer import Timer
-# import upsnet.bbox.bbox_transform as box_utils
-# import upsnet.mask.mask_transform as segm_utils
-
-# from lib.utils.logging import logger
-import pdb
 
 class JsonDataset(object):
     """A class representing a COCO json dataset."""

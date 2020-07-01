@@ -1,5 +1,7 @@
 ## Installation
 
+### Please consult `Tag: v1.0rc1` of [mmdetection](https://github.com/open-mmlab/mmdetection/).
+
 ### Requirements
 
 - Linux (Windows is not officially supported)
@@ -8,7 +10,7 @@
 - CUDA 9.0 or higher
 - NCCL 2
 - GCC(G++) 4.9 or higher
-- [mmcv](https://github.com/open-mmlab/mmcv)
+- [mmcv 0.2.14](https://github.com/open-mmlab/mmcv)
 
 We have tested the following versions of OS and softwares:
 

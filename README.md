@@ -1,10 +1,12 @@
 
 # VPSNet for Video Panoptic Segmentation
 
-## Official implementation for "Video Panoptic Segmentation" (CVPR 2020 Oral) <br/>[[Paper](https://arxiv.org/abs/2006.11339)] [[Dataset](https://www.dropbox.com/s/ecem4kq0fdkver4/cityscapes-vps-dataset-1.0.zip?dl=0)] [[Project](https://sites.google.com/view/video-panoptic)] [[Slides](https://drive.google.com/uc?id=1525wpf3kDy2kEsbaPo79ak713gYSfBPe)]
+## Official implementation for "Video Panoptic Segmentation" (CVPR 2020 Oral) <br/>[[Paper](https://arxiv.org/abs/2006.11339)] [[Dataset](https://www.dropbox.com/s/ecem4kq0fdkver4/cityscapes-vps-dataset-1.0.zip?dl=0)] [[Project](https://sites.google.com/view/video-panoptic)] [[Slides](https://drive.google.com/uc?id=1525wpf3kDy2kEsbaPo79ak713gYSfBPe)]  [[Codalab](https://competitions.codalab.org/competitions/26182)]
 
 [Dahun Kim](https://mcahny.github.io/), [Sanghyun Woo](https://sites.google.com/view/sanghyunwoo/), [Joon-Young Lee](https://joonyoung-cv.github.io/), and [In So Kweon](https://rcv.kaist.ac.kr).
 
+## Update
+2020.08.23. &nbsp; Cityscapes-VPS <b>test</b> set evaluation is now available at this <a href="https://competitions.codalab.org/competitions/26182">Codalab server.</a>
 
 <img src="./image/landscape.png" width="800"> <br/>
 <img src="./image/panoptic_pair_240.gif" width="800"> <br/>
@@ -100,7 +102,7 @@ python tools/test_vpq.py configs/cityscapes/fusetrack.py \
 ```
 Files containing the predicted results will be generated as `pred.json` and `pan_pred/*.png` at  `work_dirs/cityscapes_vps/fusetrack_vpct/test_pans_unified/`. 
 
-Cityscapes-VPS `test` split currently only allows evaluation on the codalab server. Please upload `submission.zip` to codalab server (will be open soon) to see actual performances.
+Cityscapes-VPS `test` split currently only allows evaluation on the codalab server. Please upload `submission.zip` to <a href="https://competitions.codalab.org/competitions/26182">Codalab server</a> to see actual performances.
 ```
 submission.zip
 ├── pred.json

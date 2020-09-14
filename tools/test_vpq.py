@@ -23,7 +23,6 @@ from tools.config.config import config, update_config
 from tools.dataset import *
 import pickle
 import json
-import pdb
 
 
 def single_gpu_test(model, data_loader, show=False):
@@ -183,7 +182,6 @@ def main():
                 pred_pans_2ch, output_dir,
                 categories=categories,
                 names = names,
-                # pan_im_json_file=args.pan_im_json_file,
                 n_video=args.n_video)
     print('==> Done: vps_inference')
 

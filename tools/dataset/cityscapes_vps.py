@@ -43,7 +43,7 @@ class CityscapesVps(BaseDataset):
             max_nframes= cpu_num*nframes_per_video
             nsplits = (len(pan_2ch_all)-1)//max_nframes + 1
             annotations, pan_all = [], []
-            for i in range(0,len(pan_2ch_all), max_nframes):
+            for i in range(0, len(pan_2ch_all), max_nframes):
                 print('==> Read and convert VPS output - split %d/%d'%((i//max_nframes)+1, nsplits))
                 pan_2ch_part = pan_2ch_all[i:min(
                         i+max_nframes, len(pan_2ch_all))]

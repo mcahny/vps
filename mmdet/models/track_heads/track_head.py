@@ -85,12 +85,13 @@ class TrackHead(nn.Module):
         else:
             # match coeff needs to be length of 3
             assert(len(self.match_coeff) == 3)
-            # return match_ll + self.match_coeff[0] * \
-            #     torch.log(bbox_scores) + self.match_coeff[1] * bbox_ious \
-            #     + self.match_coeff[2] * label_delta
-            return self.match_coeff[0] * \
-                torch.log(bbox_scores) + self.match_coeff[1] * bbox_ious \
-                + self.match_coeff[2] * label_delta
+            return (match_ll +
+                self.match_coeff[0] * torch.log(bbox_scores) + 
+                self.match_coeff[1] * bbox_ious + 
+                self.match_coeff[2] * label_delta)
+            # return (self.match_coeff[0] * torch.log(bbox_scores) + 
+            #     self.match_coeff[1] * bbox_ious + 
+            #     self.match_coeff[2] * label_delta)
     
     def forward(self, x, ref_x, x_n, ref_x_n):
         # x and ref_x are the grouped bbox features of current and reference frame

@@ -97,7 +97,7 @@ python tools/eval_vpq.py \
 python tools/test_vpq.py configs/cityscapes/fusetrack.py \
   work_dirs/cityscapes_vps/fusetrack_vpct/latest.pth \
   --out work_dirs/cityscapes_vps/fusetrack_vpct/test.pkl \
-  --dataset CityscapesVps --has_track --n_video 50 \
+  --dataset CityscapesVps --n_video 50 \
   --pan_im_json_file data/cityscapes_vps/panoptic_im_test_city_vps.json
 ```
 Files containing the predicted results will be generated as `pred.json` and `pan_pred/*.png` at  `work_dirs/cityscapes_vps/fusetrack_vpct/test_pans_unified/`. 

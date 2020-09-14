@@ -67,7 +67,7 @@ model = dict(
         in_channels=256,
         fc_out_channels=1024,
         roi_feat_size=7,
-        match_coeff=[1.0, 2.0, 10],
+        match_coeff=[1.0, 2.0, 10.0],
         loss_match=dict(
             type='CrossEntropyLoss', use_sigmoid=False, loss_weight=0.5),
         ),

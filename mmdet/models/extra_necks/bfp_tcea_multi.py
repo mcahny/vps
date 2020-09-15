@@ -8,10 +8,10 @@ from ..flow_modules import (WarpingLayer, LiteFlowNetCorr)
 from ..flow_modules.resample2d_package.resample2d import Resample2d
 from mmdet.datasets.pipelines.flow_utils import vis_flow
 from ..utils.attention import CBAM
-import pdb
+
 
 @EXTRA_NECKS.register_module
-class BFPTcea(nn.Module):
+class BFPTceaMulti(nn.Module):
     """BFP (Balanced Feature Pyrmamids)
 
     BFP takes multi-level features as inputs and gather them into a single one,

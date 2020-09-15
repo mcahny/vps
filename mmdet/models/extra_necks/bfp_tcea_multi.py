@@ -4,11 +4,11 @@ import torch.nn.functional as F
 from mmcv.cnn import xavier_init
 from ..registry import EXTRA_NECKS
 from ..utils import ConvModule, TCEA_Fusion
-from ..utils.attention import CBAM
 from ..flow_modules import (WarpingLayer, LiteFlowNetCorr)
 from ..flow_modules.resample2d_package.resample2d import Resample2d
 from mmdet.datasets.pipelines.flow_utils import vis_flow
-
+from ..utils.attention import CBAM
+import pdb
 
 @EXTRA_NECKS.register_module
 class BFPTcea(nn.Module):
@@ -130,7 +130,8 @@ class BFPTcea(nn.Module):
             # B,3,C,H,W
         else:
             bsf_stack = torch.stack([bsf, warp_bsf], dim=1)
-        bsf = self.tcea_fusion(bsf_stack)  # B,2,C,H,W -> B,1,C,H,W
+        # B,2,C,H,W
+        bsf = self.tcea_fusion(bsf_stack)
 
         # Refinement
         if self.refine_type is not None:

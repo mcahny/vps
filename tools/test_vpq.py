@@ -83,6 +83,7 @@ def parse_args():
     # ---- VPQ - specific arguments
     parser.add_argument('--n_video', type=int, default=50)
     parser.add_argument('--pan_im_json_file', type=str, default='data/cityscapes_vps/panoptic_im_val_city_vps.json')
+    parser.add_argument('--mode', type=str, default='val')
     args, rest = parser.parse_known_args()
     update_config(args.test_config)
     args = parser.parse_args()
@@ -99,9 +100,21 @@ def main():
     cfg = mmcv.Config.fromfile(args.config)
     if cfg.get('cudnn_benchmark', False):
         torch.backedns.cudnn.benchmark = True
+    
     cfg.model.pretrained = None
     cfg.data.test.test_mode = True
     distributed = False
+
+    if args.mode == 'val':
+        cfg.data.test.ann_file = cfg.data.test.ann_file.replace("test", "val")
+        cfg.data.test.img_prefix = cfg.data.test.img_prefix.replace("test", "val")
+        cfg.data.test.ref_prefix = cfg.data.test.ref_prefix.replace("test", "val")
+    elif args.mode == 'test':
+        cfg.data.test.ann_file = cfg.data.test.ann_file.replace("val", "test")
+        cfg.data.test.img_prefix = cfg.data.test.img_prefix.replace("val", "test")
+        cfg.data.test.ref_prefix = cfg.data.test.ref_prefix.replace("val", "test")
+    else:
+        raise KeyError("Argument 'mode' must be either 'val' or 'test'.")
 
     # build the dataloader
     dataset = build_dataset(cfg.data.test)

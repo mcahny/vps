@@ -92,13 +92,13 @@ def vpq_compute_single_core(gt_pred_set, categories, nframes=2):
                 if el['id'] in gt_segms:
                     gt_segms[el['id']]['area'] += el['area']
                 else:
-                    gt_segms[el['id']] = el
+                    gt_segms[el['id']] = copy.deepcopy(el)
             pred_segms = {}
             for el in pred_json['segments_info']:
                 if el['id'] in pred_segms:
                     pred_segms[el['id']]['area'] += el['area']
                 else:
-                    pred_segms[el['id']] = el
+                    pred_segms[el['id']] = copy.deepcopy(el)
             # predicted segments area calculation + prediction sanity checks
             pred_labels_set = set(el['id'] for el in pred_json['segments_info'])
             labels, labels_cnt = np.unique(pan_pred, return_counts=True)

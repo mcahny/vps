@@ -35,6 +35,7 @@ def panoptic_video_converter():
     annotations = []
     instid2color = {}
     videos = []
+    id_generator = IdGenerator(categories_dict)
     print('==> %s/panoptic_video/ ...'%(MODE)) 
 
     for idx in trange(len(file_list)):
@@ -55,7 +56,6 @@ def panoptic_video_converter():
                        "height": original_format.shape[0],
                        "file_name": image_filename})
         pan_format = np.zeros((original_format.shape[0], original_format.shape[1], 3), dtype=np.uint8)
-        id_generator = IdGenerator(categories_dict)
 
         l = np.unique(original_format)
 

@@ -81,15 +81,6 @@ def sem_inst2pan(sem_file, inst_file, id_converter, ori2fcn):
             continue
         pan_map[obj_mask] = fcn_id*1000 + obj_id
 
-    # Heuristics for the Ego-Centric Car
-    ego_map = label_map[int(label_map.shape[0]*0.7):,:]
-    ego_map[ego_map==VOID] = 0 # "ROAD"
-    label_map[int(label_map.shape[0]*0.7):,:] = ego_map
-
-    ego_map = pan_map[int(pan_map.shape[0]*0.7):,:]
-    ego_map[ego_map==VOID] = 0 # "ROAD"
-    pan_map[int(pan_map.shape[0]*0.7):,:] = ego_map
-
     return pan_map.astype(np.uint32), label_map.astype(np.uint8)
 
 def panoptic_multi_core(sem_files, inst_files, id_converter, ori2fcn):

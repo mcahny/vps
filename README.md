@@ -5,8 +5,8 @@
 
 [Dahun Kim](https://mcahny.github.io/), [Sanghyun Woo](https://sites.google.com/view/sanghyunwoo/), [Joon-Young Lee](https://joonyoung-cv.github.io/), and [In So Kweon](https://rcv.kaist.ac.kr).
 
-## Update
-2020.08.23. &nbsp; Cityscapes-VPS <b>test</b> set evaluation is now available at this <a href="https://competitions.codalab.org/competitions/26183">Codalab server.</a>
+
+Cityscapes-VPS <b>test</b> set evaluation is now available at this <a href="https://competitions.codalab.org/competitions/26183">Codalab server.</a>
 
 <img src="./image/landscape.png" width="800"> <br/>
 <img src="./image/panoptic_pair_240.gif" width="800"> <br/>
@@ -72,6 +72,8 @@ mmdetection
 │   │   ├── test
 │   │   │   ├── img_all
 ```
+
+VIPER dataset is provided by ["Playing for Benchmarks, ICCV 2017"](https://playing-for-benchmarks.org/). We use the 'day' split of the dataset by converting it into the video panoptic segmentation format. The converted dataset is provided upon [request](mcahny@kaist.ac.kr).
 
 ## Evaluation Metric 
 <img src="./image/vpq_measure.png" width="1000"> 
